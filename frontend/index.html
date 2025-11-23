@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI-Powered Peer Learning Matcher</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <div class="logo-icon">🎓</div>
+                <h1>AI Peer Matcher</h1>
+            </div>
+            <p class="tagline">Find your perfect study partner with intelligent matching</p>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Create Profile Section -->
+            <section id="create-section" class="section active">
+                <div class="section-header">
+                    <h2>Create Your Profile</h2>
+                    <p>Tell us about your strengths and what you need help with</p>
+                </div>
+
+                <form id="profile-form" class="profile-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="student-id">Student ID *</label>
+                            <input type="text" id="student-id" name="id" required 
+                                   placeholder="e.g., stu001">
+                        </div>
+                        <div class="form-group">
+                            <label for="name">Full Name *</label>
+                            <input type="text" id="name" name="name" required 
+                                   placeholder="e.g., John Doe">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="strengths">Your Strengths *</label>
+                        <textarea id="strengths" name="strengths" required 
+                                  placeholder="Subjects or topics you excel at (e.g., Mathematics, Calculus, Physics, Problem Solving)"></textarea>
+                        <span class="helper-text">What subjects are you good at?</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="weaknesses">Areas You Need Help *</label>
+                        <textarea id="weaknesses" name="weaknesses" required 
+                                  placeholder="Subjects or topics you struggle with (e.g., Chemistry, Literature, Essay Writing)"></textarea>
+                        <span class="helper-text">What subjects do you need help with?</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="preferences">Study Preferences (Optional)</label>
+                        <input type="text" id="preferences" name="preferences" 
+                               placeholder="e.g., Evenings, small groups, online sessions">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="description">About You (Optional)</label>
+                        <textarea id="description" name="description" 
+                                  placeholder="Tell us about your learning style, goals, or anything else..."></textarea>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">
+                            <span class="btn-text">Create Profile & Find Matches</span>
+                            <span class="btn-icon">→</span>
+                        </button>
+                    </div>
+                </form>
+            </section>
+
+            <!-- Matches Section -->
+            <section id="matches-section" class="section">
+                <div class="section-header">
+                    <h2>Your Perfect Matches</h2>
+                    <p id="match-subtitle">Students who can help you learn</p>
+                </div>
+
+                <div id="matches-container" class="matches-container">
+                    <!-- Matches will be dynamically inserted here -->
+                </div>
+
+                <div class="form-actions">
+                    <button id="back-btn" class="btn btn-secondary">
+                        <span class="btn-icon">←</span>
+                        <span class="btn-text">Create Another Profile</span>
+                    </button>
+                </div>
+            </section>
+
+            <!-- Loading Overlay -->
+            <div id="loading-overlay" class="loading-overlay">
+                <div class="loader"></div>
+                <p>Finding your perfect matches...</p>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>Powered by AI • Sentence Transformers • FastAPI</p>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
