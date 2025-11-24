@@ -41,9 +41,9 @@ function showError(message) {
     const errorDiv = document.createElement('div');
     errorDiv.className = 'error-message';
     errorDiv.textContent = message;
-    
+
     profileForm.insertBefore(errorDiv, profileForm.firstChild);
-    
+
     setTimeout(() => {
         errorDiv.remove();
     }, 5000);
@@ -69,12 +69,12 @@ async function createProfile(profileData) {
         },
         body: JSON.stringify(profileData)
     });
-    
+
     if (!response.ok) {
         const error = await response.json();
         throw new Error(error.detail || 'Failed to create profile');
     }
-    
+
     return await response.json();
 }
 
@@ -83,12 +83,12 @@ async function createProfile(profileData) {
  */
 async function getMatches(studentId, topK = 3) {
     const response = await fetch(`${API_BASE_URL}/match/${studentId}?top_k=${topK}`);
-    
+
     if (!response.ok) {
         const error = await response.json();
         throw new Error(error.detail || 'Failed to get matches');
     }
-    
+
     return await response.json();
 }
 
@@ -97,7 +97,7 @@ async function getMatches(studentId, topK = 3) {
  */
 function renderMatches(matchData) {
     matchesContainer.innerHTML = '';
-    
+
     if (!matchData.matches || matchData.matches.length === 0) {
         matchesContainer.innerHTML = `
             <div class="empty-state">
@@ -108,21 +108,21 @@ function renderMatches(matchData) {
         `;
         return;
     }
-    
+
     // Update subtitle
     matchSubtitle.textContent = `Found ${matchData.total_matches} perfect match${matchData.total_matches !== 1 ? 'es' : ''} for ${matchData.student_name}`;
-    
+
     // Create match cards
     matchData.matches.forEach((match, index) => {
         const matchCard = document.createElement('div');
         matchCard.className = 'match-card';
         matchCard.style.animationDelay = `${index * 0.1}s`;
-        
+
         const scorePercentage = Math.round(match.score * 100);
-        const scoreColor = match.score > 0.7 ? 'var(--success)' : 
-                          match.score > 0.4 ? 'var(--warning)' : 
-                          'var(--error)';
-        
+        const scoreColor = match.score > 0.7 ? 'var(--success)' :
+            match.score > 0.4 ? 'var(--warning)' :
+                'var(--error)';
+
         matchCard.innerHTML = `
             <div class="match-header">
                 <div class="match-info">
@@ -145,7 +145,7 @@ function renderMatches(matchData) {
                 </div>
             </div>
         `;
-        
+
         matchesContainer.appendChild(matchCard);
     });
 }
@@ -155,52 +155,97 @@ function renderMatches(matchData) {
  */
 profileForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    
+
     // Clear previous errors
     const existingError = profileForm.querySelector('.error-message');
     if (existingError) {
         existingError.remove();
     }
-    
-    // Get form data
+
+    // Get basic form data
     const formData = new FormData(profileForm);
+
+    // Collect checked strengths
+    const strengthCheckboxes = document.querySelectorAll('input[name="strength"]:checked');
+    const strengthValues = Array.from(strengthCheckboxes).map(cb => cb.value);
+
+    // Add custom strengths from text input
+    const strengthsOther = document.getElementById('strengths-other').value.trim();
+    if (strengthsOther) {
+        const customStrengths = strengthsOther.split(',').map(s => s.trim()).filter(s => s);
+        strengthValues.push(...customStrengths);
+    }
+
+    // Collect checked weaknesses
+    const weaknessCheckboxes = document.querySelectorAll('input[name="weakness"]:checked');
+    const weaknessValues = Array.from(weaknessCheckboxes).map(cb => cb.value);
+
+    // Add custom weaknesses from text input
+    const weaknessesOther = document.getElementById('weaknesses-other').value.trim();
+    if (weaknessesOther) {
+        const customWeaknesses = weaknessesOther.split(',').map(s => s.trim()).filter(s => s);
+        weaknessValues.push(...customWeaknesses);
+    }
+
+    // Collect checked preferences
+    const preferenceCheckboxes = document.querySelectorAll('input[name="preference"]:checked');
+    const preferenceValues = Array.from(preferenceCheckboxes).map(cb => cb.value);
+
+    // Add custom preferences from text input
+    const preferencesOther = document.getElementById('preferences-other').value.trim();
+    if (preferencesOther) {
+        const customPreferences = preferencesOther.split(',').map(s => s.trim()).filter(s => s);
+        preferenceValues.push(...customPreferences);
+    }
+
+    // Build profile data object
     const profileData = {
         id: formData.get('id').trim(),
         name: formData.get('name').trim(),
-        strengths: formData.get('strengths').trim(),
-        weaknesses: formData.get('weaknesses').trim(),
-        preferences: formData.get('preferences').trim(),
+        strengths: strengthValues.join(', '),
+        weaknesses: weaknessValues.join(', '),
+        preferences: preferenceValues.join(', '),
         description: formData.get('description').trim()
     };
-    
+
     // Validate required fields
-    if (!profileData.id || !profileData.name || !profileData.strengths || !profileData.weaknesses) {
-        showError('Please fill in all required fields (marked with *)');
+    if (!profileData.id || !profileData.name) {
+        showError('Please fill in Student ID and Name');
         return;
     }
-    
+
+    if (strengthValues.length === 0) {
+        showError('Please select at least one strength or add custom strengths');
+        return;
+    }
+
+    if (weaknessValues.length === 0) {
+        showError('Please select at least one area you need help with or add custom areas');
+        return;
+    }
+
     try {
         showLoading('Creating your profile...');
-        
+
         // Create profile
         const createResponse = await createProfile(profileData);
         currentStudentId = profileData.id;
         currentStudentName = profileData.name;
-        
+
         showLoading('Finding your perfect matches...');
-        
+
         // Get matches
         const matchData = await getMatches(currentStudentId);
-        
+
         // Render matches
         renderMatches(matchData);
-        
+
         // Show matches section
         showSection(matchesSection);
-        
+
         // Reset form
         profileForm.reset();
-        
+
     } catch (error) {
         console.error('Error:', error);
         showError(error.message);

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,6 +10,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
+
 <body>
     <div class="container">
         <!-- Header -->
@@ -33,40 +35,194 @@
                     <div class="form-row">
                         <div class="form-group">
                             <label for="student-id">Student ID *</label>
-                            <input type="text" id="student-id" name="id" required 
-                                   placeholder="e.g., stu001">
+                            <input type="text" id="student-id" name="id" required placeholder="e.g., stu001">
                         </div>
                         <div class="form-group">
                             <label for="name">Full Name *</label>
-                            <input type="text" id="name" name="name" required 
-                                   placeholder="e.g., John Doe">
+                            <input type="text" id="name" name="name" required placeholder="e.g., John Doe">
                         </div>
                     </div>
 
+                    <!-- Strengths Section -->
                     <div class="form-group">
-                        <label for="strengths">Your Strengths *</label>
-                        <textarea id="strengths" name="strengths" required 
-                                  placeholder="Subjects or topics you excel at (e.g., Mathematics, Calculus, Physics, Problem Solving)"></textarea>
-                        <span class="helper-text">What subjects are you good at?</span>
+                        <label>Your Strengths * <span class="helper-text-inline">(Select all that apply)</span></label>
+                        <div class="checkbox-grid">
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="strength" value="Mathematics">
+                                <span>Mathematics</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="strength" value="Physics">
+                                <span>Physics</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="strength" value="Chemistry">
+                                <span>Chemistry</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="strength" value="Biology">
+                                <span>Biology</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="strength" value="Computer Science">
+                                <span>Computer Science</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="strength" value="Programming">
+                                <span>Programming</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="strength" value="English Literature">
+                                <span>English Literature</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="strength" value="Creative Writing">
+                                <span>Creative Writing</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="strength" value="History">
+                                <span>History</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="strength" value="Economics">
+                                <span>Economics</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="strength" value="Psychology">
+                                <span>Psychology</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="strength" value="Business">
+                                <span>Business</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="strength" value="Statistics">
+                                <span>Statistics</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="strength" value="Art">
+                                <span>Art</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="strength" value="Music">
+                                <span>Music</span>
+                            </label>
+                        </div>
+                        <input type="text" id="strengths-other" class="other-input"
+                            placeholder="Other strengths (comma separated)">
                     </div>
 
+                    <!-- Weaknesses Section -->
                     <div class="form-group">
-                        <label for="weaknesses">Areas You Need Help *</label>
-                        <textarea id="weaknesses" name="weaknesses" required 
-                                  placeholder="Subjects or topics you struggle with (e.g., Chemistry, Literature, Essay Writing)"></textarea>
-                        <span class="helper-text">What subjects do you need help with?</span>
+                        <label>Areas You Need Help * <span class="helper-text-inline">(Select all that
+                                apply)</span></label>
+                        <div class="checkbox-grid">
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="weakness" value="Mathematics">
+                                <span>Mathematics</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="weakness" value="Physics">
+                                <span>Physics</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="weakness" value="Chemistry">
+                                <span>Chemistry</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="weakness" value="Biology">
+                                <span>Biology</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="weakness" value="Computer Science">
+                                <span>Computer Science</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="weakness" value="Programming">
+                                <span>Programming</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="weakness" value="English Literature">
+                                <span>English Literature</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="weakness" value="Creative Writing">
+                                <span>Creative Writing</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="weakness" value="History">
+                                <span>History</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="weakness" value="Economics">
+                                <span>Economics</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="weakness" value="Psychology">
+                                <span>Psychology</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="weakness" value="Business">
+                                <span>Business</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="weakness" value="Statistics">
+                                <span>Statistics</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="weakness" value="Art">
+                                <span>Art</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="weakness" value="Music">
+                                <span>Music</span>
+                            </label>
+                        </div>
+                        <input type="text" id="weaknesses-other" class="other-input"
+                            placeholder="Other areas you need help with (comma separated)">
                     </div>
 
+                    <!-- Preferences Section -->
                     <div class="form-group">
-                        <label for="preferences">Study Preferences (Optional)</label>
-                        <input type="text" id="preferences" name="preferences" 
-                               placeholder="e.g., Evenings, small groups, online sessions">
+                        <label>Study Preferences <span class="helper-text-inline">(Optional)</span></label>
+                        <div class="checkbox-grid preferences-grid">
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="preference" value="Morning sessions">
+                                <span>Morning sessions</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="preference" value="Evening sessions">
+                                <span>Evening sessions</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="preference" value="Weekend study">
+                                <span>Weekend study</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="preference" value="Online sessions">
+                                <span>Online sessions</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="preference" value="In-person meetings">
+                                <span>In-person meetings</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="preference" value="Small groups">
+                                <span>Small groups</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" name="preference" value="One-on-one">
+                                <span>One-on-one</span>
+                            </label>
+                        </div>
+                        <input type="text" id="preferences-other" class="other-input"
+                            placeholder="Other preferences (comma separated)">
                     </div>
 
                     <div class="form-group">
                         <label for="description">About You (Optional)</label>
-                        <textarea id="description" name="description" 
-                                  placeholder="Tell us about your learning style, goals, or anything else..."></textarea>
+                        <textarea id="description" name="description"
+                            placeholder="Tell us about your learning style, goals, or anything else..."></textarea>
                     </div>
 
                     <div class="form-actions">
@@ -112,4 +268,5 @@
 
     <script src="app.js"></script>
 </body>
+
 </html>
