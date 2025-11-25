@@ -220,24 +220,61 @@ profileForm.addEventListener('submit', async (e) => {
     }
 
     if (weaknessValues.length === 0) {
-        backBtn.addEventListener('click', () => {
-            showSection(createSection);
-        });
+        showError('Please select at least one area you need help with or add custom areas');
+        return;
+    }
 
-        /**
-         * Check API health on load
-         */
-        async function checkAPIHealth() {
-            try {
-                const response = await fetch(`${API_BASE_URL}/`);
-                if (response.ok) {
-                    console.log('✅ API is online and ready');
-                }
-            } catch (error) {
-                console.warn('⚠️ API is not reachable. Make sure the backend is running.');
-                showError('Backend API is not running. Please start the server first.');
-            }
+    try {
+        showLoading('Creating your profile...');
+
+        // Create profile
+        const createResponse = await createProfile(profileData);
+        currentStudentId = profileData.id;
+        currentStudentName = profileData.name;
+
+        showLoading('Finding your perfect matches...');
+
+        // Get matches
+        const matchData = await getMatches(currentStudentId);
+
+        // Render matches
+        renderMatches(matchData);
+
+        // Show matches section
+        showSection(matchesSection);
+
+        // Reset form
+        profileForm.reset();
+
+    } catch (error) {
+        console.error('Error:', error);
+        showError(error.message);
+    } finally {
+        hideLoading();
+    }
+});
+
+/**
+ * Handle back button
+ */
+backBtn.addEventListener('click', () => {
+    showSection(createSection);
+});
+
+/**
+ * Check API health on load
+ */
+async function checkAPIHealth() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/`);
+        if (response.ok) {
+            console.log('✅ API is online and ready');
         }
+    } catch (error) {
+        console.warn('⚠️ API is not reachable. Make sure the backend is running.');
+        showError('Backend API is not running. Please start the server first.');
+    }
+}
 
-        // Initialize
-        checkAPIHealth();
+// Initialize
+checkAPIHealth();
