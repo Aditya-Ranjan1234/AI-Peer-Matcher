@@ -3,8 +3,8 @@
  * Handles form submission, API calls, and UI updates
  */
 
-// Configuration
-const API_BASE_URL = 'http://localhost:8000';
+// Import configuration
+import { API_BASE_URL } from './config.js';
 
 // DOM Elements
 const createSection = document.getElementById('create-section');
