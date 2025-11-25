@@ -1,6 +1,7 @@
-fastapi
-uvicorn
 sentence-transformers
-pydantic
 python-multipart
 scikit-learn
+fastapi==0.109.0
+uvicorn==0.30.0
+pydantic==2.6.4
+pydantic-core==2.20.1
