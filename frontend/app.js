@@ -226,22 +226,29 @@ profileForm.addEventListener('submit', async (e) => {
 
     try {
         showLoading('Creating your profile...');
+        console.log('DEBUG: Starting profile creation...');
 
         // Create profile
         const createResponse = await createProfile(profileData);
+        console.log('DEBUG: Profile created:', createResponse);
         currentStudentId = profileData.id;
         currentStudentName = profileData.name;
 
         showLoading('Finding your perfect matches...');
 
         // Get matches
+        console.log('DEBUG: Fetching matches for', currentStudentId);
         const matchData = await getMatches(currentStudentId);
+        console.log('DEBUG: Matches received:', matchData);
 
         // Render matches
+        console.log('DEBUG: Rendering matches...');
         renderMatches(matchData);
 
         // Show matches section
+        console.log('DEBUG: Showing matches section...');
         showSection(matchesSection);
+        console.log('DEBUG: Matches section shown');
 
         // Reset form
         profileForm.reset();
