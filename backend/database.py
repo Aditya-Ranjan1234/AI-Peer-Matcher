@@ -22,8 +22,8 @@ if not MONGODB_URL:
 # Create a single client instance that will be reused across requests.
 client = AsyncIOMotorClient(MONGODB_URL)
 
-# ``get_default_database`` extracts the database name from the URI.
-_db = client.get_default_database()
+# Use an explicit database name
+_db = client["peer_matcher"]
 
 def get_db():
     """FastAPI dependency that returns the MongoDB database.

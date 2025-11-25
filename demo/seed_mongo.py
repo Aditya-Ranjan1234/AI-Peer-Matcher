@@ -37,7 +37,7 @@ async def main():
         raise RuntimeError("MONGODB_URL environment variable not set. Set it before running this script.")
 
     client = AsyncIOMotorClient(mongo_url)
-    db = client.get_default_database()  # uses DB name from the URI
+    db = client["peer_matcher"]  # explicit database name
     collection = db["profiles"]
 
     # Optional: clear existing collection first
