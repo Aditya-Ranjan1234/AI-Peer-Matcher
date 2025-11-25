@@ -12,19 +12,6 @@ def status():
     print("Checking database status...")
     r = requests.get(f"{API_BASE}/")
     data = r.json()
-    print(f"\n✅ Backend: {data['status']}")
-    print(f"📊 Total Profiles: {data['total_profiles']}\n")
-    return data['total_profiles']
-
-def clear_all():
-    """Clear all profiles from database"""
-   print("\n⚠️  WARNING: This will delete ALL profiles!")
-    confirm = input("Type 'YES' to confirm: ")
-    
-    if confirm != "YES":
-        print("❌ Cancelled")
-        return
-    
     print("\nFetching all profiles...")
     r = requests.get(f"{API_BASE}/profiles")
     profiles = r.json()['profiles']

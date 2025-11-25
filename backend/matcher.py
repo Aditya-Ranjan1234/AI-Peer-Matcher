@@ -8,6 +8,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
 from typing import List, Dict, Tuple
 import logging
+import os
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -15,22 +16,24 @@ logger = logging.getLogger(__name__)
 
 
 class EmbeddingService:
-    """Singleton service for generating text embeddings using Sentence Transformers"""
-    
-    _instance = None
+    """
+    Singleton service for generating text embeddings using Sentence Transformers.
+    Uses cached model from backend/model_cache for faster cold starts (no download needed).
+    """
     _model = None
     
-    def __new__(cls):
-        if cls._instance is None:
-            cls._instance = super(EmbeddingService, cls).__new__(cls)
-        return cls._instance
-    
     def get_model(self):
-        """Lazy load the model on first use"""
+        """Get or initialize the Sentence Transformer model from cache"""
         if self._model is None:
-            logger.info("Loading Sentence Transformer model 'all-MiniLM-L6-v2'...")
-            self._model = SentenceTransformer('all-MiniLM-L6-v2')
-            logger.info("Model loaded successfully!")
+            # Use preloaded model from cache to avoid download on cold start
+            cache_folder = os.path.join(os.path.dirname(__file__), 'model_cache')
+            logger.info(f"Loading Sentence Transformer model from cache: {cache_folder}")
+            
+            self._model = SentenceTransformer(
+                'all-MiniLM-L6-v2',
+                cache_folder=cache_folder
+            )
+            logger.info("Model loaded successfully from cache!")
         return self._model
     
     def embed_text(self, text: str) -> List[float]:
