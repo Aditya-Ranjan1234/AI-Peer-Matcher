@@ -153,7 +153,12 @@ async def get_matches(
 
     # Load all profiles into a dict compatible with the existing matcher utility
     all_docs = await collection.find().to_list(length=None)
-    profiles_dict = {doc["id"]: doc for doc in all_docs}
+    
+    # Remove MongoDB's _id field from each document (not needed by matcher)
+    profiles_dict = {}
+    for doc in all_docs:
+        doc.pop("_id", None)  # Remove _id if present
+        profiles_dict[doc["id"]] = doc
 
     matches = find_best_matches(student_id, profiles_dict, top_k)
 
