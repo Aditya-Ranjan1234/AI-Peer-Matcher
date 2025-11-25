@@ -11,7 +11,7 @@ import logging
 
 from models import ProfileInput, MatchResult
 from matcher import EmbeddingService, find_best_matches
-from .database import get_db
+from database import get_db
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
