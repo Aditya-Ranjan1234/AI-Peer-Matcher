@@ -215,20 +215,42 @@
                                 <span>One-on-one</span>
                             </label>
                         </div>
-                        <input type="text" id="preferences-other" class="other-input" <p id="match-subtitle">Students
-                        who can help you learn</p>
+                        <input type="text" id="preferences-other" class="other-input"
+                            placeholder="Other preferences (comma separated)">
                     </div>
 
-                    <div id="matches-container" class="matches-container">
-                        <!-- Matches will be dynamically inserted here -->
+                    <div class="form-group">
+                        <label for="description">About You (Optional)</label>
+                        <textarea id="description" name="description"
+                            placeholder="Tell us about your learning style, goals, or anything else..."></textarea>
                     </div>
 
                     <div class="form-actions">
-                        <button id="back-btn" class="btn btn-secondary">
-                            <span class="btn-icon">←</span>
-                            <span class="btn-text">Create Another Profile</span>
+                        <button type="submit" class="btn btn-primary">
+                            <span class="btn-text">Create Profile & Find Matches</span>
+                            <span class="btn-icon">→</span>
                         </button>
                     </div>
+                </form>
+            </section>
+
+            <!-- Matches Section -->
+            <section id="matches-section" class="section">
+                <div class="section-header">
+                    <h2>Your Perfect Matches</h2>
+                    <p id="match-subtitle">Students who can help you learn</p>
+                </div>
+
+                <div id="matches-container" class="matches-container">
+                    <!-- Matches will be dynamically inserted here -->
+                </div>
+
+                <div class="form-actions">
+                    <button id="back-btn" class="btn btn-secondary">
+                        <span class="btn-icon">←</span>
+                        <span class="btn-text">Create Another Profile</span>
+                    </button>
+                </div>
             </section>
 
             <!-- Loading Overlay -->
