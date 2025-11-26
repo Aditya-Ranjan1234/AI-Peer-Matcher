@@ -81,6 +81,14 @@ async def create_profile(
     try:
         strengths_emb = embedding_service.embed_text(profile.strengths)
         weaknesses_emb = embedding_service.embed_text(profile.weaknesses)
+        
+        # Ensure embeddings are lists (they should be from embed_text, but double-check)
+        if not isinstance(strengths_emb, list):
+            strengths_emb = list(strengths_emb)
+        if not isinstance(weaknesses_emb, list):
+            weaknesses_emb = list(weaknesses_emb)
+            
+        logger.info(f"Generated embeddings - strengths: {len(strengths_emb)} dims, weaknesses: {len(weaknesses_emb)} dims")
     except Exception as e:
         logger.error(f"Error generating embeddings: {e}")
         raise HTTPException(
@@ -92,6 +100,9 @@ async def create_profile(
     profile_data = profile.model_dump()
     profile_data["strengths_emb"] = strengths_emb
     profile_data["weaknesses_emb"] = weaknesses_emb
+    
+    # Log what we're storing
+    logger.info(f"Storing profile with fields: {list(profile_data.keys())}")
 
     await collection.insert_one(profile_data)
     logger.info(f"Profile created successfully for {profile.id}")
@@ -154,11 +165,37 @@ async def get_matches(
     # Load all profiles into a dict compatible with the existing matcher utility
     all_docs = await collection.find().to_list(length=None)
     
-    # Remove MongoDB's _id field from each document (not needed by matcher)
+    # Validate and prepare profiles
     profiles_dict = {}
+    skipped_profiles = []
+    
     for doc in all_docs:
-        doc.pop("_id", None)  # Remove _id if present
+        doc.pop("_id", None)  # Remove MongoDB's _id field
+        
+        # Validate that embeddings exist and are valid
+        student_id_val = doc.get("id", "UNKNOWN")
+        
+        if "strengths_emb" not in doc or "weaknesses_emb" not in doc:
+            logger.warning(f"Profile {student_id_val} missing embedding fields - skipping from matches")
+            skipped_profiles.append(student_id_val)
+            continue
+            
+        if not doc["strengths_emb"] or not doc["weaknesses_emb"]:
+            logger.warning(f"Profile {student_id_val} has null/empty embeddings - skipping from matches")
+            skipped_profiles.append(student_id_val)
+            continue
+            
         profiles_dict[doc["id"]] = doc
+    
+    if skipped_profiles:
+        logger.warning(f"Skipped {len(skipped_profiles)} profiles due to missing embeddings: {skipped_profiles}")
+    
+    # Ensure target student has valid embeddings
+    if student_id not in profiles_dict:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Student '{student_id}' profile exists but has invalid or missing embeddings. Please recreate the profile.",
+        )
 
     matches = find_best_matches(student_id, profiles_dict, top_k)
 

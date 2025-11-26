@@ -62,34 +62,66 @@ function showSection(section) {
  * Create a new student profile
  */
 async function createProfile(profileData) {
-    const response = await fetch(`${API_BASE_URL}/profiles`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(profileData)
-    });
+    try {
+        const response = await fetch(`${API_BASE_URL}/profiles`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(profileData)
+        });
 
-    if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.detail || 'Failed to create profile');
+        if (!response.ok) {
+            let errorMessage = 'Failed to create profile';
+            try {
+                const error = await response.json();
+                errorMessage = error.detail || errorMessage;
+            } catch (e) {
+                errorMessage = `${response.status}: ${response.statusText}`;
+            }
+            throw new Error(errorMessage);
+        }
+
+        return await response.json();
+    } catch (error) {
+        if (error instanceof TypeError && error.message === 'Failed to fetch') {
+            throw new Error('Unable to connect to the server. Please check if the backend is running.');
+        }
+        throw error;
     }
-
-    return await response.json();
 }
 
 /**
  * Get matches for a student
  */
 async function getMatches(studentId, topK = 3) {
-    const response = await fetch(`${API_BASE_URL}/match/${studentId}?top_k=${topK}`);
+    // Ensure studentId is properly encoded for URL
+    const encodedStudentId = encodeURIComponent(studentId);
+    const url = `${API_BASE_URL}/match/${encodedStudentId}?top_k=${topK}`;
 
-    if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.detail || 'Failed to get matches');
+    try {
+        const response = await fetch(url);
+
+        if (!response.ok) {
+            let errorMessage = 'Failed to get matches';
+            try {
+                const error = await response.json();
+                errorMessage = error.detail || errorMessage;
+            } catch (e) {
+                // If response is not JSON, use status text
+                errorMessage = `${response.status}: ${response.statusText}`;
+            }
+            throw new Error(errorMessage);
+        }
+
+        return await response.json();
+    } catch (error) {
+        // Enhance error message for network errors
+        if (error instanceof TypeError && error.message === 'Failed to fetch') {
+            throw new Error('Unable to connect to the server. Please check if the backend is running.');
+        }
+        throw error;
     }
-
-    return await response.json();
 }
 
 /**

@@ -92,17 +92,40 @@ def complementary_score(profile_a: Dict, profile_b: Dict) -> float:
     Returns:
         Average complementary similarity score (0 to 1)
     """
-    # A's strengths help B's weaknesses
-    score_1 = cosine_sim(profile_a['strengths_emb'], profile_b['weaknesses_emb'])
+    # Validate that all required embedding fields exist
+    required_fields = ['strengths_emb', 'weaknesses_emb']
     
-    # B's strengths help A's weaknesses
-    score_2 = cosine_sim(profile_b['strengths_emb'], profile_a['weaknesses_emb'])
+    for field in required_fields:
+        if field not in profile_a:
+            logger.error(f"Profile {profile_a.get('id', 'UNKNOWN')} missing field: {field}")
+            return 0.0
+        if field not in profile_b:
+            logger.error(f"Profile {profile_b.get('id', 'UNKNOWN')} missing field: {field}")
+            return 0.0
     
-    # Average of both directions
-    avg_score = (score_1 + score_2) / 2.0
+    # Validate embeddings are not None and are lists/arrays
+    if not profile_a['strengths_emb'] or not profile_a['weaknesses_emb']:
+        logger.error(f"Profile {profile_a.get('id', 'UNKNOWN')} has null embeddings")
+        return 0.0
+    if not profile_b['strengths_emb'] or not profile_b['weaknesses_emb']:
+        logger.error(f"Profile {profile_b.get('id', 'UNKNOWN')} has null embeddings")
+        return 0.0
     
-    # Ensure score is in valid range [0, 1]
-    return max(0.0, min(1.0, avg_score))
+    try:
+        # A's strengths help B's weaknesses
+        score_1 = cosine_sim(profile_a['strengths_emb'], profile_b['weaknesses_emb'])
+        
+        # B's strengths help A's weaknesses
+        score_2 = cosine_sim(profile_b['strengths_emb'], profile_a['weaknesses_emb'])
+        
+        # Average of both directions
+        avg_score = (score_1 + score_2) / 2.0
+        
+        # Ensure score is in valid range [0, 1]
+        return max(0.0, min(1.0, avg_score))
+    except Exception as e:
+        logger.error(f"Error calculating complementary score: {e}")
+        return 0.0
 
 
 def find_best_matches(
