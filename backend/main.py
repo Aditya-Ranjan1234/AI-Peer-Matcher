@@ -7,7 +7,8 @@ import uuid
 
 from models import (
     ProfileInput, MatchResult, TeamResult, 
-    UserAuth, UserInDB, Project, ProjectCreate, Comment, ProjectWithScore
+    UserAuth, UserInDB, Project, ProjectCreate, Comment, ProjectWithScore,
+    PasswordChange
 )
 from matcher import (
     EmbeddingService, find_best_matches, 
@@ -125,6 +126,24 @@ async def login(user_data: UserAuth, users = Depends(get_users_collection)):
     
     access_token = create_access_token(data={"sub": user["id"]})
     return {"access_token": access_token, "token_type": "bearer"}
+
+
+@app.post("/change-password")
+async def change_password(
+    data: PasswordChange,
+    user_id: str = Depends(get_current_user_id),
+    users = Depends(get_users_collection)
+):
+    user = await users.find_one({"id": user_id})
+    if not user or not verify_password(data.old_password, user["hashed_password"]):
+        raise HTTPException(status_code=401, detail="Incorrect current password")
+    
+    hashed_pw = get_password_hash(data.new_password)
+    await users.update_one(
+        {"id": user_id},
+        {"$set": {"hashed_password": hashed_pw}}
+    )
+    return {"message": "Password updated successfully"}
 
 
 # ---------------------------------------------------------------------------

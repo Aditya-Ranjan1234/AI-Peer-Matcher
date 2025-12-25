@@ -16,7 +16,8 @@ const SECTIONS = {
 
 const TABS = {
     FINDER: 'finder-tab',
-    PROJECTS: 'projects-tab'
+    PROJECTS: 'projects-tab',
+    SETTINGS: 'settings-tab'
 };
 
 const SUBJECTS = [
@@ -370,8 +371,36 @@ const App = {
             // 3. Login
             state.user = { id: profileData.id, name: profileData.name };
             await this.login(password);
+        } finally {
+            this.hideLoading();
+        }
+    },
+
+    async changePassword(e) {
+        e.preventDefault();
+        const oldPass = document.getElementById('old-password').value;
+        const newPass = document.getElementById('change-new-password').value;
+        const confirmPass = document.getElementById('confirm-new-password').value;
+
+        if (newPass.length < 8) {
+            return this.showError("New password must be at least 8 characters");
+        }
+
+        if (newPass !== confirmPass) {
+            return this.showError("New passwords do not match");
+        }
+
+        this.showLoading("Updating password...");
+        try {
+            await apiRequest('/change-password', {
+                method: 'POST',
+                body: JSON.stringify({ old_password: oldPass, new_password: newPass })
+            });
+            alert("Password updated successfully!");
+            document.getElementById('change-password-form').reset();
+            this.switchTab(TABS.FINDER);
         } catch (e) {
-            this.showError(e.message, elements.profileForm);
+            this.showError(e.message);
         } finally {
             this.hideLoading();
         }
@@ -440,6 +469,12 @@ function setupEventListeners() {
             App.hideLoading();
         }
     };
+
+    // Settings
+    const changePassForm = document.getElementById('change-password-form');
+    if (changePassForm) {
+        changePassForm.onsubmit = (e) => App.changePassword(e);
+    }
 }
 
 function checkAutoLogin() {

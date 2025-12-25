@@ -44,6 +44,12 @@ class UserAuth(BaseModel):
     password: str = Field(..., description="Unique password")
 
 
+class PasswordChange(BaseModel):
+    """Schema for changing password"""
+    old_password: str
+    new_password: str
+
+
 class UserInDB(BaseModel):
     """Stored user credentials"""
     id: str

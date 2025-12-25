@@ -118,17 +118,20 @@
 
             <!-- 4. Dashboard (Tabs Section) -->
             <section id="dashboard-section" class="section">
-                <nav class="tabs-nav">
+                <div class="tabs-nav">
                     <button class="tab-btn active" data-tab="finder-tab">
-                        <span class="tab-icon">🔍</span>
-                        <span class="tab-text">Peer Finder</span>
+                        <span>🔍</span> Peer Finder
                     </button>
                     <button class="tab-btn" data-tab="projects-tab">
-                        <span class="tab-icon">💡</span>
-                        <span class="tab-text">Project Hub</span>
+                        <span>💡</span> Project Hub
                     </button>
-                    <button id="logout-btn" class="btn btn-link logout-btn">Logout</button>
-                </nav>
+                    <button class="tab-btn" data-tab="settings-tab">
+                        <span>⚙️</span> Settings
+                    </button>
+                    <a href="#" class="tab-btn logout-btn" id="logout-btn">
+                        <span>🚪</span> Logout
+                    </a>
+                </div>
 
                 <div class="tab-content">
                     <!-- Finder Tab -->
@@ -162,6 +165,35 @@
                         </div>
                         <div id="projects-container" class="projects-container grid">
                             <!-- Projects -->
+                        </div>
+                    </div>
+
+                    <!-- Settings Tab -->
+                    <div id="settings-tab" class="tab-pane">
+                        <div class="content-header">
+                            <h3>Account Settings</h3>
+                        </div>
+                        <div class="auth-card">
+                            <h4>Change Password</h4>
+                            <p style="color: var(--text-secondary); margin-bottom: 1rem; font-size: 0.9rem;">
+                                Update your account security.
+                            </p>
+                            <form id="change-password-form">
+                                <div class="form-group">
+                                    <label>Current Password</label>
+                                    <input type="password" id="old-password" required placeholder="••••••••">
+                                </div>
+                                <div class="form-group">
+                                    <label>New Password</label>
+                                    <input type="password" id="change-new-password" required
+                                        placeholder="Minimum 8 characters">
+                                </div>
+                                <div class="form-group">
+                                    <label>Confirm New Password</label>
+                                    <input type="password" id="confirm-new-password" required placeholder="••••••••">
+                                </div>
+                                <button type="submit" class="btn btn-primary btn-full">Update Password</button>
+                            </form>
                         </div>
                     </div>
                 </div>
