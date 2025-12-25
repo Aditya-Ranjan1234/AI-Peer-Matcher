@@ -89,9 +89,17 @@ async def signup(
     profiles = Depends(get_profiles_collection)
 ):
     # 1. Check if profile exists (must be a student in the system)
+    logger.info(f"Signup attempt for USN: '{user_data.id}'")
     profile = await profiles.find_one({"id": user_data.id})
     if not profile:
-        raise HTTPException(status_code=404, detail="Student ID not found in records. Create a profile first.")
+        logger.warning(f"Profile not found for USN: '{user_data.id}' during signup")
+        # Try a case-insensitive check just in case
+        profile_case = await profiles.find_one({"id": {"$regex": f"^{user_data.id}$", "$options": "i"}})
+        if profile_case:
+            logger.info(f"Found profile with case-insensitive match: {profile_case['id']}")
+            user_data.id = profile_case["id"] # Sync the ID
+        else:
+            raise HTTPException(status_code=404, detail=f"Student ID '{user_data.id}' not found in records.")
     
     # 2. Check if already registered
     existing_user = await users.find_one({"id": user_data.id})
@@ -140,6 +148,7 @@ async def create_profile(
     profile_data["weaknesses_emb"] = list(weaknesses_emb)
     
     await collection.insert_one(profile_data)
+    logger.info(f"Successfully SAVED profile to DB with USN: '{profile.id}'")
     return {"message": "Profile created", "student_id": profile.id}
 
 @app.get("/profiles")
