@@ -166,3 +166,82 @@ def find_best_matches(
     # Sort by score (descending) and return top K
     scores.sort(key=lambda x: x[2], reverse=True)
     return scores[:top_k]
+
+
+def find_team_of_4(
+    student_id: str,
+    profiles: Dict[str, Dict]
+) -> Tuple[List[Dict], float]:
+    """
+    Form a team of 4 people who complement each other.
+    Greedy approach to find 3 additional members.
+    """
+    if student_id not in profiles:
+        return [], 0.0
+    
+    team_ids = [student_id]
+    # Keep track of profiles for the result
+    team_profiles = [profiles[student_id]]
+    
+    # We need 3 more members
+    for _ in range(3):
+        best_peer_id = None
+        best_avg_score = -1.0
+        
+        for pid, profile in profiles.items():
+            if pid in team_ids:
+                continue
+            
+            # Calculate average complementary score with everyone currently in the team
+            total_score = 0.0
+            for member_profile in team_profiles:
+                total_score += complementary_score(member_profile, profile)
+            
+            avg_score = total_score / len(team_profiles)
+            
+            if avg_score > best_avg_score:
+                best_avg_score = avg_score
+                best_peer_id = pid
+                
+        if best_peer_id:
+            team_ids.append(best_peer_id)
+            team_profiles.append(profiles[best_peer_id])
+    
+    # Calculate overall team complementarity score (average of all unique pairs)
+    total_pair_score = 0.0
+    pair_count = 0
+    import itertools
+    for p1, p2 in itertools.combinations(team_profiles, 2):
+        total_pair_score += complementary_score(p1, p2)
+        pair_count += 1
+    
+    overall_score = total_pair_score / pair_count if pair_count > 0 else 0.0
+    
+    # Convert to standard format for frontend
+    result_members = []
+    for p in team_profiles:
+        result_members.append({
+            "student_id": p['id'],
+            "name": p['name'],
+            "score": overall_score, # For simplicity, each gets the team score
+            "strengths": p['strengths'],
+            "weaknesses": p['weaknesses']
+        })
+        
+    return result_members, overall_score
+
+
+def calculate_project_relevance(
+    user_strengths_emb: List[float],
+    project_desc_emb: List[float]
+) -> float:
+    """
+    Calculate how relevant a project is to a user's strengths.
+    Uses cosine similarity between strengths and project description.
+    """
+    if not user_strengths_emb or not project_desc_emb:
+        return 0.0
+        
+    score = cosine_sim(user_strengths_emb, project_desc_emb)
+    # Map from [-1, 1] to [0, 1]
+    return max(0.0, (score + 1.0) / 2.0)

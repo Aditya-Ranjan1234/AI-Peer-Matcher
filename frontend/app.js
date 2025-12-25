@@ -1,319 +1,453 @@
 /**
- * Frontend Logic for AI-Powered Peer Learning Matcher
- * Handles form submission, API calls, and UI updates
+ * Frontend Logic for AI Peer Matcher & Project Hub v2.0
+ * Handles Auth, Matching, Teams, and Projects
  */
 
-// Import configuration
 import { API_BASE_URL } from './config.js';
 
-// DOM Elements
-const createSection = document.getElementById('create-section');
-const matchesSection = document.getElementById('matches-section');
-const profileForm = document.getElementById('profile-form');
-const matchesContainer = document.getElementById('matches-container');
-const matchSubtitle = document.getElementById('match-subtitle');
-const backBtn = document.getElementById('back-btn');
-const loadingOverlay = document.getElementById('loading-overlay');
+// --- Constants ---
+const SECTIONS = {
+    LANDING: 'landing-section',
+    AUTH: 'auth-section',
+    CREATE: 'create-section',
+    DASHBOARD: 'dashboard-section',
+    TEAM: 'team-section'
+};
 
-// State
-let currentStudentId = null;
-let currentStudentName = null;
+const TABS = {
+    FINDER: 'finder-tab',
+    PROJECTS: 'projects-tab'
+};
 
-/**
- * Show loading overlay
- */
-function showLoading(message = 'Processing...') {
-    loadingOverlay.querySelector('p').textContent = message;
-    loadingOverlay.classList.add('active');
+const SUBJECTS = [
+    "Mathematics", "Physics", "Chemistry", "Biology",
+    "Computer Science", "Programming", "English Literature",
+    "Creative Writing", "History", "Economics",
+    "Psychology", "Business", "Statistics", "Art", "Music"
+];
+
+// --- State ---
+let state = {
+    user: null, // { id, name, token }
+    currentTab: TABS.FINDER,
+    matches: [],
+    projects: []
+};
+
+// --- DOM Elements ---
+const elements = {
+    sections: document.querySelectorAll('.section'),
+    loadingOverlay: document.getElementById('loading-overlay'),
+    loadingText: document.getElementById('loading-text'),
+
+    // Landing
+    checkUsnInput: document.getElementById('check-usn'),
+    checkIdBtn: document.getElementById('check-id-btn'),
+    showSignupLink: document.getElementById('show-signup-link'),
+
+    // Auth
+    authTitle: document.getElementById('auth-title'),
+    authSubtitle: document.getElementById('auth-subtitle'),
+    authUserInfo: document.getElementById('auth-user-info'),
+    authUserName: document.getElementById('auth-user-name'),
+    authPasswordInput: document.getElementById('auth-password'),
+    authSubmitBtn: document.getElementById('auth-submit-btn'),
+    authBackBtn: document.getElementById('auth-back-btn'),
+
+    // Profile
+    profileForm: document.getElementById('profile-form'),
+    strengthsGrid: document.getElementById('strengths-grid'),
+    weaknessesGrid: document.getElementById('weaknesses-grid'),
+
+    // Dashboard
+    tabs: document.querySelectorAll('.tab-btn'),
+    tabPanes: document.querySelectorAll('.tab-pane'),
+    logoutBtn: document.getElementById('logout-btn'),
+    matchesContainer: document.getElementById('matches-container'),
+    projectsContainer: document.getElementById('projects-container'),
+
+    // Team
+    formTeamBtn: document.getElementById('form-team-btn'),
+    teamSection: document.getElementById('team-section'),
+    teamContainer: document.getElementById('team-container'),
+    teamBackBtn: document.getElementById('team-back-btn'),
+
+    // Projects
+    createProjectBtn: document.getElementById('create-project-btn'),
+    projectModal: document.getElementById('project-modal'),
+    projectForm: document.getElementById('project-form'),
+    closeProjectModal: document.getElementById('close-project-modal')
+};
+
+// --- Initialization ---
+
+function init() {
+    populateGrids();
+    setupEventListeners();
+    checkAutoLogin();
 }
 
-/**
- * Hide loading overlay
- */
-function hideLoading() {
-    loadingOverlay.classList.remove('active');
-}
+function populateGrids() {
+    const createItem = (val, type) => `
+        <label class="checkbox-item">
+            <input type="checkbox" name="${type}" value="${val}">
+            <span>${val}</span>
+        </label>
+    `;
 
-/**
- * Show error message
- */
-function showError(message) {
-    const errorDiv = document.createElement('div');
-    errorDiv.className = 'error-message';
-    errorDiv.textContent = message;
-
-    profileForm.insertBefore(errorDiv, profileForm.firstChild);
-
-    setTimeout(() => {
-        errorDiv.remove();
-    }, 5000);
-}
-
-/**
- * Switch between sections
- */
-function showSection(section) {
-    createSection.classList.remove('active');
-    matchesSection.classList.remove('active');
-    section.classList.add('active');
-}
-
-/**
- * Create a new student profile
- */
-async function createProfile(profileData) {
-    try {
-        const response = await fetch(`${API_BASE_URL}/profiles`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(profileData)
-        });
-
-        if (!response.ok) {
-            let errorMessage = 'Failed to create profile';
-            try {
-                const error = await response.json();
-                errorMessage = error.detail || errorMessage;
-            } catch (e) {
-                errorMessage = `${response.status}: ${response.statusText}`;
-            }
-            throw new Error(errorMessage);
-        }
-
-        return await response.json();
-    } catch (error) {
-        if (error instanceof TypeError && error.message === 'Failed to fetch') {
-            throw new Error('Unable to connect to the server. Please check if the backend is running.');
-        }
-        throw error;
+    if (elements.strengthsGrid) {
+        elements.strengthsGrid.innerHTML = SUBJECTS.map(s => createItem(s, 'strength')).join('');
+    }
+    if (elements.weaknessesGrid) {
+        elements.weaknessesGrid.innerHTML = SUBJECTS.map(s => createItem(s, 'weakness')).join('');
     }
 }
 
-/**
- * Get matches for a student
- */
-async function getMatches(studentId, topK = 3) {
-    // Ensure studentId is properly encoded for URL
-    const encodedStudentId = encodeURIComponent(studentId);
-    const url = `${API_BASE_URL}/match/${encodedStudentId}?top_k=${topK}`;
+// --- API Helpers ---
 
-    try {
-        const response = await fetch(url);
+async function apiRequest(endpoint, options = {}) {
+    const url = `${API_BASE_URL}${endpoint}`;
+    const token = localStorage.getItem('token');
 
-        if (!response.ok) {
-            let errorMessage = 'Failed to get matches';
-            try {
-                const error = await response.json();
-                errorMessage = error.detail || errorMessage;
-            } catch (e) {
-                // If response is not JSON, use status text
-                errorMessage = `${response.status}: ${response.statusText}`;
-            }
-            throw new Error(errorMessage);
-        }
-
-        return await response.json();
-    } catch (error) {
-        // Enhance error message for network errors
-        if (error instanceof TypeError && error.message === 'Failed to fetch') {
-            throw new Error('Unable to connect to the server. Please check if the backend is running.');
-        }
-        throw error;
-    }
-}
-
-/**
- * Render match cards
- */
-function renderMatches(matchData) {
-    matchesContainer.innerHTML = '';
-
-    if (!matchData.matches || matchData.matches.length === 0) {
-        matchesContainer.innerHTML = `
-            <div class="empty-state">
-                <div class="empty-state-icon">🔍</div>
-                <h3>No matches found yet</h3>
-                <p>Add more student profiles to find matches!</p>
-            </div>
-        `;
-        return;
-    }
-
-    // Update subtitle
-    matchSubtitle.textContent = `Found ${matchData.total_matches} perfect match${matchData.total_matches !== 1 ? 'es' : ''} for ${matchData.student_name}`;
-
-    // Create match cards
-    matchData.matches.forEach((match, index) => {
-        const matchCard = document.createElement('div');
-        matchCard.className = 'match-card';
-        matchCard.style.animationDelay = `${index * 0.1}s`;
-
-        const scorePercentage = Math.round(match.score * 100);
-        const scoreColor = match.score > 0.7 ? 'var(--success)' :
-            match.score > 0.4 ? 'var(--warning)' :
-                'var(--error)';
-
-        matchCard.innerHTML = `
-            <div class="match-header">
-                <div class="match-info">
-                    <h3>${match.name}</h3>
-                    <p class="match-id">ID: ${match.student_id}</p>
-                </div>
-                <div class="match-score">
-                    <div class="score-label">Match Score</div>
-                    <div class="score-value" style="color: ${scoreColor}">${scorePercentage}%</div>
-                </div>
-            </div>
-            <div class="match-details">
-                <div class="detail-item">
-                    <div class="detail-label">💪 Their Strengths (Can help you with)</div>
-                    <div class="detail-value">${match.strengths}</div>
-                </div>
-                <div class="detail-item">
-                    <div class="detail-label">📚 They Need Help With (You can help them)</div>
-                    <div class="detail-value">${match.weaknesses}</div>
-                </div>
-            </div>
-        `;
-
-        matchesContainer.appendChild(matchCard);
-    });
-}
-
-/**
- * Handle form submission
- */
-profileForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-
-    // Clear previous errors
-    const existingError = profileForm.querySelector('.error-message');
-    if (existingError) {
-        existingError.remove();
-    }
-
-    // Get basic form data
-    const formData = new FormData(profileForm);
-
-    // Collect checked strengths
-    const strengthCheckboxes = document.querySelectorAll('input[name="strength"]:checked');
-    const strengthValues = Array.from(strengthCheckboxes).map(cb => cb.value);
-
-    // Add custom strengths from text input
-    const strengthsOther = document.getElementById('strengths-other').value.trim();
-    if (strengthsOther) {
-        const customStrengths = strengthsOther.split(',').map(s => s.trim()).filter(s => s);
-        strengthValues.push(...customStrengths);
-    }
-
-    // Collect checked weaknesses
-    const weaknessCheckboxes = document.querySelectorAll('input[name="weakness"]:checked');
-    const weaknessValues = Array.from(weaknessCheckboxes).map(cb => cb.value);
-
-    // Add custom weaknesses from text input
-    const weaknessesOther = document.getElementById('weaknesses-other').value.trim();
-    if (weaknessesOther) {
-        const customWeaknesses = weaknessesOther.split(',').map(s => s.trim()).filter(s => s);
-        weaknessValues.push(...customWeaknesses);
-    }
-
-    // Collect checked preferences
-    const preferenceCheckboxes = document.querySelectorAll('input[name="preference"]:checked');
-    const preferenceValues = Array.from(preferenceCheckboxes).map(cb => cb.value);
-
-    // Add custom preferences from text input
-    const preferencesOther = document.getElementById('preferences-other').value.trim();
-    if (preferencesOther) {
-        const customPreferences = preferencesOther.split(',').map(s => s.trim()).filter(s => s);
-        preferenceValues.push(...customPreferences);
-    }
-
-    // Build profile data object
-    const profileData = {
-        id: formData.get('id').trim(),
-        name: formData.get('name').trim(),
-        strengths: strengthValues.join(', '),
-        weaknesses: weaknessValues.join(', '),
-        preferences: preferenceValues.join(', '),
-        description: formData.get('description').trim()
+    const headers = {
+        'Content-Type': 'application/json',
+        ...options.headers
     };
 
-    // Validate required fields
-    if (!profileData.id || !profileData.name) {
-        showError('Please fill in Student ID and Name');
-        return;
-    }
-
-    if (strengthValues.length === 0) {
-        showError('Please select at least one strength or add custom strengths');
-        return;
-    }
-
-    if (weaknessValues.length === 0) {
-        showError('Please select at least one area you need help with or add custom areas');
-        return;
+    if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
     }
 
     try {
-        showLoading('Creating your profile...');
-        console.log('DEBUG: Starting profile creation...');
+        const response = await fetch(url, { ...options, headers });
+        const data = await response.json();
 
-        // Create profile
-        const createResponse = await createProfile(profileData);
-        console.log('DEBUG: Profile created:', createResponse);
-        currentStudentId = profileData.id;
-        currentStudentName = profileData.name;
-
-        showLoading('Finding your perfect matches...');
-
-        // Get matches
-        console.log('DEBUG: Fetching matches for', currentStudentId);
-        const matchData = await getMatches(currentStudentId);
-        console.log('DEBUG: Matches received:', matchData);
-
-        // Render matches
-        console.log('DEBUG: Rendering matches...');
-        renderMatches(matchData);
-
-        // Show matches section
-        console.log('DEBUG: Showing matches section...');
-        showSection(matchesSection);
-        console.log('DEBUG: Matches section shown');
-
-        // Reset form
-        profileForm.reset();
-
-    } catch (error) {
-        console.error('Error:', error);
-        showError(error.message);
-    } finally {
-        hideLoading();
-    }
-});
-
-/**
- * Handle back button
- */
-backBtn.addEventListener('click', () => {
-    showSection(createSection);
-});
-
-/**
- * Check API health on load
- */
-async function checkAPIHealth() {
-    try {
-        const response = await fetch(`${API_BASE_URL}/`);
-        if (response.ok) {
-            console.log('✅ API is online and ready');
+        if (!response.ok) {
+            throw new Error(data.detail || 'Something went wrong');
         }
+
+        return data;
     } catch (error) {
-        console.warn('⚠️ API is not reachable. Make sure the backend is running.');
-        showError('Backend API is not running. Please start the server first.');
+        console.error(`API Error (${endpoint}):`, error);
+        throw error;
     }
 }
 
-// Initialize
-checkAPIHealth();
+// --- Logic Wrapper ---
+
+const App = {
+    showLoading(msg) {
+        elements.loadingText.textContent = msg;
+        elements.loadingOverlay.classList.add('active');
+    },
+
+    hideLoading() {
+        elements.loadingOverlay.classList.remove('active');
+    },
+
+    showError(msg, container = null) {
+        const err = document.createElement('div');
+        err.className = 'error-message';
+        err.textContent = msg;
+
+        const target = container || document.querySelector('.section.active .auth-card') || document.body;
+        target.prepend(err);
+        setTimeout(() => err.remove(), 4000);
+    },
+
+    switchSection(sectionId) {
+        elements.sections.forEach(s => s.classList.remove('active'));
+        document.getElementById(sectionId).classList.add('active');
+    },
+
+    switchTab(tabId) {
+        elements.tabs.forEach(t => t.classList.toggle('active', t.dataset.tab === tabId));
+        elements.tabPanes.forEach(p => p.classList.toggle('active', p.id === tabId));
+        state.currentTab = tabId;
+
+        if (tabId === TABS.FINDER) this.loadMatches();
+        else if (tabId === TABS.PROJECTS) this.loadProjects();
+    },
+
+    async checkId() {
+        const id = elements.checkUsnInput.value.trim();
+        if (!id) return this.showError("Please enter a Student ID");
+
+        this.showLoading("Checking records...");
+        try {
+            const result = await apiRequest(`/check-id/${encodeURIComponent(id)}`);
+            if (result.exists) {
+                // Prepare Login
+                state.user = { id, name: result.name };
+                elements.authTitle.textContent = "Welcome Back";
+                elements.authSubtitle.textContent = "Enter your password to continue";
+                elements.authUserName.textContent = result.name;
+                elements.authUserInfo.style.display = 'flex';
+                elements.authSubmitBtn.querySelector('.btn-text').textContent = "Log In";
+                this.switchSection(SECTIONS.AUTH);
+            } else {
+                this.showError(`ID ${id} not found. Please create a profile first.`);
+            }
+        } catch (e) {
+            this.showError(e.message);
+        } finally {
+            this.hideLoading();
+        }
+    },
+
+    async login(password) {
+        this.showLoading("Authenticating...");
+        try {
+            const response = await apiRequest('/login', {
+                method: 'POST',
+                body: JSON.stringify({ id: state.user.id, password })
+            });
+
+            localStorage.setItem('token', response.access_token);
+            localStorage.setItem('userId', state.user.id);
+            localStorage.setItem('userName', state.user.name);
+
+            this.onLoginSuccess();
+        } catch (e) {
+            this.showError("Invalid password. Please try again.");
+        } finally {
+            this.hideLoading();
+        }
+    },
+
+    onLoginSuccess() {
+        this.switchSection(SECTIONS.DASHBOARD);
+        this.switchTab(TABS.FINDER);
+    },
+
+    async loadMatches() {
+        const userId = localStorage.getItem('userId');
+        try {
+            const data = await apiRequest(`/match/${encodeURIComponent(userId)}?top_k=5`);
+            this.renderMatches(data.matches);
+        } catch (e) {
+            this.showError("Failed to load matches");
+        }
+    },
+
+    renderMatches(matches) {
+        elements.matchesContainer.innerHTML = matches.length ? '' : '<p class="empty-state">No matches found yet.</p>';
+        matches.forEach(m => {
+            const card = document.createElement('div');
+            card.className = 'match-card';
+            const score = Math.round(m.score * 100);
+            card.innerHTML = `
+                <div class="match-header">
+                    <div class="match-info">
+                        <h3>${m.name}</h3>
+                        <p class="match-id">USN: ${m.student_id}</p>
+                    </div>
+                    <div class="match-score">
+                        <div class="score-label">Compatibility</div>
+                        <div class="score-value">${score}%</div>
+                    </div>
+                </div>
+                <div class="match-details">
+                    <div class="detail-item"><strong>Strengths:</strong> ${m.strengths}</div>
+                    <div class="detail-item"><strong>Needs:</strong> ${m.weaknesses}</div>
+                </div>
+            `;
+            elements.matchesContainer.appendChild(card);
+        });
+    },
+
+    async formTeam() {
+        const userId = localStorage.getItem('userId');
+        this.showLoading("Analyzing team dynamics...");
+        try {
+            const data = await apiRequest(`/match/team/${encodeURIComponent(userId)}`);
+            this.renderTeam(data.team, data.total_score);
+            this.switchSection(SECTIONS.TEAM);
+        } catch (e) {
+            this.showError(e.message);
+        } finally {
+            this.hideLoading();
+        }
+    },
+
+    renderTeam(members, totalScore) {
+        elements.teamContainer.innerHTML = '';
+        members.forEach(m => {
+            const card = document.createElement('div');
+            card.className = 'match-card';
+            card.innerHTML = `
+                <h3>${m.name}</h3>
+                <p class="match-id">${m.id}</p>
+                <div class="detail-item" style="font-size: 0.8rem">
+                    <strong>Roles:</strong> ${m.strengths}
+                </div>
+            `;
+            elements.teamContainer.appendChild(card);
+        });
+    },
+
+    async loadProjects() {
+        try {
+            const data = await apiRequest('/projects');
+            this.renderProjects(data);
+        } catch (e) {
+            console.error(e);
+        }
+    },
+
+    renderProjects(projects) {
+        elements.projectsContainer.innerHTML = projects.length ? '' : '<p class="empty-state">No projects posted yet. Be the first!</p>';
+        projects.forEach(p => {
+            const card = document.createElement('div');
+            card.className = 'project-card';
+            const relevance = p.relevance_score ? Math.round(p.relevance_score * 100) : null;
+
+            card.innerHTML = `
+                <div class="project-header">
+                    <h3>${p.title}</h3>
+                    ${relevance ? `<span class="relevance-badge">${relevance}% Match</span>` : ''}
+                </div>
+                <p class="project-description">${p.description}</p>
+                <div class="project-stack">
+                    ${p.tech_stack.split(',').map(s => `<span class="tag">${s.trim()}</span>`).join('')}
+                </div>
+                <div class="project-footer">
+                    <span class="project-creator">By ${p.creator_name}</span>
+                    <button class="vote-btn ${p.voted ? 'active' : ''}" data-id="${p.id}">
+                        <span>👍</span> <span>${p.votes}</span>
+                    </button>
+                </div>
+            `;
+
+            const voteBtn = card.querySelector('.vote-btn');
+            voteBtn.onclick = () => this.voteProject(p.id);
+
+            elements.projectsContainer.appendChild(card);
+        });
+    },
+
+    async voteProject(projectId) {
+        try {
+            await apiRequest(`/projects/${projectId}/vote`, { method: 'POST' });
+            this.loadProjects();
+        } catch (e) {
+            this.showError(e.message);
+        }
+    },
+
+    async handleProfileSubmit(e) {
+        e.preventDefault();
+        const fd = new FormData(elements.profileForm);
+
+        // Collect checkboxes
+        const getCheckboxes = (name) => Array.from(document.querySelectorAll(`input[name="${name}"]:checked`)).map(c => c.value);
+        const strengths = getCheckboxes('strength');
+        const weaknesses = getCheckboxes('weakness');
+
+        const otherStrengths = document.getElementById('strengths-other').value.trim();
+        if (otherStrengths) strengths.push(...otherStrengths.split(',').map(s => s.trim()));
+
+        const otherWeaknesses = document.getElementById('weaknesses-other').value.trim();
+        if (otherWeaknesses) weaknesses.push(...otherWeaknesses.split(',').map(s => s.trim()));
+
+        const profileData = {
+            id: fd.get('id').trim(),
+            name: fd.get('name').trim(),
+            strengths: strengths.join(', '),
+            weaknesses: weaknesses.join(', '),
+            preferences: "",
+            description: ""
+        };
+
+        const password = document.getElementById('new-password').value;
+
+        this.showLoading("Creating profile...");
+        try {
+            // 1. Create Profile
+            await apiRequest('/profiles', { method: 'POST', body: JSON.stringify(profileData) });
+            // 2. Signup (Create User)
+            await apiRequest('/signup', { method: 'POST', body: JSON.stringify({ id: profileData.id, password }) });
+            // 3. Login
+            state.user = { id: profileData.id, name: profileData.name };
+            await this.login(password);
+        } catch (e) {
+            this.showError(e.message, elements.profileForm);
+        } finally {
+            this.hideLoading();
+        }
+    }
+};
+
+// --- Event Listeners ---
+
+function setupEventListeners() {
+    // Flow
+    elements.checkIdBtn.onclick = () => App.checkId();
+    elements.showSignupLink.onclick = (e) => { e.preventDefault(); App.switchSection(SECTIONS.CREATE); };
+    elements.authBackBtn.onclick = () => App.switchSection(SECTIONS.LANDING);
+
+    elements.authSubmitBtn.onclick = () => {
+        const pass = elements.authPasswordInput.value;
+        if (pass) App.login(pass);
+    };
+
+    // Profile
+    elements.profileForm.onsubmit = (e) => App.handleProfileSubmit(e);
+
+    // Auth back button in create profile
+    const profileBack = document.createElement('button');
+    profileBack.className = 'btn btn-link';
+    profileBack.textContent = "← Back to Login";
+    profileBack.onclick = (e) => { e.preventDefault(); App.switchSection(SECTIONS.LANDING); };
+    elements.profileForm.appendChild(profileBack);
+
+    // Tabs
+    elements.tabs.forEach(btn => {
+        btn.onclick = () => App.switchTab(btn.dataset.tab);
+    });
+
+    // Logout
+    elements.logoutBtn.onclick = () => {
+        localStorage.clear();
+        App.switchSection(SECTIONS.LANDING);
+    };
+
+    // Team
+    elements.formTeamBtn.onclick = () => App.formTeam();
+    elements.teamBackBtn.onclick = () => App.switchSection(SECTIONS.DASHBOARD);
+
+    // Project Modal
+    elements.createProjectBtn.onclick = () => elements.projectModal.classList.add('active');
+    elements.closeProjectModal.onclick = () => elements.projectModal.classList.remove('active');
+
+    elements.projectForm.onsubmit = async (e) => {
+        e.preventDefault();
+        const body = {
+            title: document.getElementById('project-title').value,
+            description: document.getElementById('project-desc').value,
+            tech_stack: document.getElementById('project-stack').value
+        };
+
+        App.showLoading("Posting project...");
+        try {
+            await apiRequest('/projects', { method: 'POST', body: JSON.stringify(body) });
+            elements.projectModal.classList.remove('active');
+            elements.projectForm.reset();
+            App.loadProjects();
+        } catch (e) {
+            App.showError(e.message);
+        } finally {
+            App.hideLoading();
+        }
+    };
+}
+
+function checkAutoLogin() {
+    const token = localStorage.getItem('token');
+    if (token) {
+        App.onLoginSuccess();
+    }
+}
+
+// Start
+init();

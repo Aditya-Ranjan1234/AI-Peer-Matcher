@@ -24,245 +24,201 @@
 
         <!-- Main Content -->
         <main class="main-content">
-            <!-- Create Profile Section -->
-            <section id="create-section" class="section active">
+            <!-- 1. Landing / ID Check Section -->
+            <section id="landing-section" class="section active">
+                <div class="section-header">
+                    <h2>Welcome to AI Peer Matcher</h2>
+                    <p>Enter your Student ID (USN) to get started</p>
+                </div>
+                <div class="auth-card">
+                    <div class="form-group">
+                        <label for="check-usn">Student ID (USN)</label>
+                        <input type="text" id="check-usn" placeholder="e.g., 1RV23AI000">
+                    </div>
+                    <button id="check-id-btn" class="btn btn-primary btn-full">
+                        <span class="btn-text">Continue</span>
+                        <span class="btn-icon">→</span>
+                    </button>
+                    <p class="auth-footer">Don't have a profile? <a href="#" id="show-signup-link">Create one here</a>
+                    </p>
+                </div>
+            </section>
+
+            <!-- 2. Auth Section (Login/Signup) -->
+            <section id="auth-section" class="section">
+                <div class="section-header">
+                    <h2 id="auth-title">Login to Your Account</h2>
+                    <p id="auth-subtitle">Verify your identity to access the platform</p>
+                </div>
+                <div class="auth-card">
+                    <div id="auth-user-info" class="user-badge" style="display: none;">
+                        <span class="avatar">👤</span>
+                        <span id="auth-user-name">John Doe</span>
+                    </div>
+                    <div class="form-group">
+                        <label for="auth-password">Enter Password</label>
+                        <input type="password" id="auth-password" placeholder="••••••••">
+                    </div>
+                    <button id="auth-submit-btn" class="btn btn-primary btn-full">
+                        <span class="btn-text">Log In</span>
+                    </button>
+                    <button id="auth-back-btn" class="btn btn-link">← Back to ID entry</button>
+                </div>
+            </section>
+
+            <!-- 3. Profile Creation Section -->
+            <section id="create-section" class="section">
                 <div class="section-header">
                     <h2>Create Your Profile</h2>
-                    <p>Tell us about your strengths and what you need help with</p>
+                    <p>Join the community and find your perfect peer</p>
                 </div>
-
+                <!-- Reuse your existing form structure but wrapped nicely -->
                 <form id="profile-form" class="profile-form">
                     <div class="form-row">
                         <div class="form-group">
                             <label for="student-id">Student ID *</label>
-                            <input type="text" id="student-id" name="id" required placeholder="e.g., stu001">
+                            <input type="text" id="student-id" name="id" required placeholder="e.g., 1RV23AI001">
                         </div>
                         <div class="form-group">
                             <label for="name">Full Name *</label>
-                            <input type="text" id="name" name="name" required placeholder="e.g., John Doe">
+                            <input type="text" id="name" name="name" required placeholder="John Doe">
                         </div>
                     </div>
+                    <!-- Password for new profile -->
+                    <div class="form-group">
+                        <label for="new-password">Set a Password *</label>
+                        <input type="password" id="new-password" required placeholder="Choose a unique password">
+                    </div>
 
-                    <!-- Strengths Section -->
                     <div class="form-group">
                         <label>Your Strengths * <span class="helper-text-inline">(Select all that apply)</span></label>
-                        <div class="checkbox-grid">
-                            <label class="checkbox-item">
-                                <input type="checkbox" name="strength" value="Mathematics">
-                                <span>Mathematics</span>
-                            </label>
-                            <label class="checkbox-item">
-                                <input type="checkbox" name="strength" value="Physics">
-                                <span>Physics</span>
-                            </label>
-                            <label class="checkbox-item">
-                                <input type="checkbox" name="strength" value="Chemistry">
-                                <span>Chemistry</span>
-                            </label>
-                            <label class="checkbox-item">
-                                <input type="checkbox" name="strength" value="Biology">
-                                <span>Biology</span>
-                            </label>
-                            <label class="checkbox-item">
-                                <input type="checkbox" name="strength" value="Computer Science">
-                                <span>Computer Science</span>
-                            </label>
-                            <label class="checkbox-item">
-                                <input type="checkbox" name="strength" value="Programming">
-                                <span>Programming</span>
-                            </label>
-                            <label class="checkbox-item">
-                                <input type="checkbox" name="strength" value="English Literature">
-                                <span>English Literature</span>
-                            </label>
-                            <label class="checkbox-item">
-                                <input type="checkbox" name="strength" value="Creative Writing">
-                                <span>Creative Writing</span>
-                            </label>
-                            <label class="checkbox-item">
-                                <input type="checkbox" name="strength" value="History">
-                                <span>History</span>
-                            </label>
-                            <label class="checkbox-item">
-                                <input type="checkbox" name="strength" value="Economics">
-                                <span>Economics</span>
-                            </label>
-                            <label class="checkbox-item">
-                                <input type="checkbox" name="strength" value="Psychology">
-                                <span>Psychology</span>
-                            </label>
-                            <label class="checkbox-item">
-                                <input type="checkbox" name="strength" value="Business">
-                                <span>Business</span>
-                            </label>
-                            <label class="checkbox-item">
-                                <input type="checkbox" name="strength" value="Statistics">
-                                <span>Statistics</span>
-                            </label>
-                            <label class="checkbox-item">
-                                <input type="checkbox" name="strength" value="Art">
-                                <span>Art</span>
-                            </label>
-                            <label class="checkbox-item">
-                                <input type="checkbox" name="strength" value="Music">
-                                <span>Music</span>
-                            </label>
+                        <div class="checkbox-grid" id="strengths-grid">
+                            <!-- Populated by JS -->
                         </div>
                         <input type="text" id="strengths-other" class="other-input"
                             placeholder="Other strengths (comma separated)">
                     </div>
 
-                    <!-- Weaknesses Section -->
                     <div class="form-group">
-                        <label>Areas You Need Help * <span class="helper-text-inline">(Select all that
-                                apply)</span></label>
-                        <div class="checkbox-grid">
-                            <label class="checkbox-item">
-                                <input type="checkbox" name="weakness" value="Mathematics">
-                                <span>Mathematics</span>
-                            </label>
-                            <label class="checkbox-item">
-                                <input type="checkbox" name="weakness" value="Physics">
-                                <span>Physics</span>
-                            </label>
-                            <label class="checkbox-item">
-                                <input type="checkbox" name="weakness" value="Chemistry">
-                                <span>Chemistry</span>
-                            </label>
-                            <label class="checkbox-item">
-                                <input type="checkbox" name="weakness" value="Biology">
-                                <span>Biology</span>
-                            </label>
-                            <label class="checkbox-item">
-                                <input type="checkbox" name="weakness" value="Computer Science">
-                                <span>Computer Science</span>
-                            </label>
-                            <label class="checkbox-item">
-                                <input type="checkbox" name="weakness" value="Programming">
-                                <span>Programming</span>
-                            </label>
-                            <label class="checkbox-item">
-                                <input type="checkbox" name="weakness" value="English Literature">
-                                <span>English Literature</span>
-                            </label>
-                            <label class="checkbox-item">
-                                <input type="checkbox" name="weakness" value="Creative Writing">
-                                <span>Creative Writing</span>
-                            </label>
-                            <label class="checkbox-item">
-                                <input type="checkbox" name="weakness" value="History">
-                                <span>History</span>
-                            </label>
-                            <label class="checkbox-item">
-                                <input type="checkbox" name="weakness" value="Economics">
-                                <span>Economics</span>
-                            </label>
-                            <label class="checkbox-item">
-                                <input type="checkbox" name="weakness" value="Psychology">
-                                <span>Psychology</span>
-                            </label>
-                            <label class="checkbox-item">
-                                <input type="checkbox" name="weakness" value="Business">
-                                <span>Business</span>
-                            </label>
-                            <label class="checkbox-item">
-                                <input type="checkbox" name="weakness" value="Statistics">
-                                <span>Statistics</span>
-                            </label>
-                            <label class="checkbox-item">
-                                <input type="checkbox" name="weakness" value="Art">
-                                <span>Art</span>
-                            </label>
-                            <label class="checkbox-item">
-                                <input type="checkbox" name="weakness" value="Music">
-                                <span>Music</span>
-                            </label>
+                        <label>Areas You Need Help *</label>
+                        <div class="checkbox-grid" id="weaknesses-grid">
+                            <!-- Populated by JS -->
                         </div>
                         <input type="text" id="weaknesses-other" class="other-input"
-                            placeholder="Other areas you need help with (comma separated)">
-                    </div>
-
-                    <!-- Preferences Section -->
-                    <div class="form-group">
-                        <label>Study Preferences <span class="helper-text-inline">(Optional)</span></label>
-                        <div class="checkbox-grid preferences-grid">
-                            <label class="checkbox-item">
-                                <input type="checkbox" name="preference" value="Morning sessions">
-                                <span>Morning sessions</span>
-                            </label>
-                            <label class="checkbox-item">
-                                <input type="checkbox" name="preference" value="Evening sessions">
-                                <span>Evening sessions</span>
-                            </label>
-                            <label class="checkbox-item">
-                                <input type="checkbox" name="preference" value="Weekend study">
-                                <span>Weekend study</span>
-                            </label>
-                            <label class="checkbox-item">
-                                <input type="checkbox" name="preference" value="Online sessions">
-                                <span>Online sessions</span>
-                            </label>
-                            <label class="checkbox-item">
-                                <input type="checkbox" name="preference" value="In-person meetings">
-                                <span>In-person meetings</span>
-                            </label>
-                            <label class="checkbox-item">
-                                <input type="checkbox" name="preference" value="Small groups">
-                                <span>Small groups</span>
-                            </label>
-                            <label class="checkbox-item">
-                                <input type="checkbox" name="preference" value="One-on-one">
-                                <span>One-on-one</span>
-                            </label>
-                        </div>
-                        <input type="text" id="preferences-other" class="other-input"
-                            placeholder="Other preferences (comma separated)">
-                    </div>
-
-                    <div class="form-group">
-                        <label for="description">About You (Optional)</label>
-                        <textarea id="description" name="description"
-                            placeholder="Tell us about your learning style, goals, or anything else..."></textarea>
+                            placeholder="Other areas (comma separated)">
                     </div>
 
                     <div class="form-actions">
                         <button type="submit" class="btn btn-primary">
-                            <span class="btn-text">Create Profile & Find Matches</span>
-                            <span class="btn-icon">→</span>
+                            <span class="btn-text">Create Profile & Register</span>
                         </button>
                     </div>
                 </form>
             </section>
 
-            <!-- Matches Section -->
-            <section id="matches-section" class="section">
-                <div class="section-header">
-                    <h2>Your Perfect Matches</h2>
-                    <p id="match-subtitle">Students who can help you learn</p>
-                </div>
-
-                <div id="matches-container" class="matches-container">
-                    <!-- Matches will be dynamically inserted here -->
-                </div>
-
-                <div class="form-actions">
-                    <button id="back-btn" class="btn btn-secondary">
-                        <span class="btn-icon">←</span>
-                        <span class="btn-text">Create Another Profile</span>
+            <!-- 4. Dashboard (Tabs Section) -->
+            <section id="dashboard-section" class="section">
+                <nav class="tabs-nav">
+                    <button class="tab-btn active" data-tab="finder-tab">
+                        <span class="tab-icon">🔍</span>
+                        <span class="tab-text">Peer Finder</span>
                     </button>
+                    <button class="tab-btn" data-tab="projects-tab">
+                        <span class="tab-icon">💡</span>
+                        <span class="tab-text">Project Hub</span>
+                    </button>
+                    <button id="logout-btn" class="btn btn-link logout-btn">Logout</button>
+                </nav>
+
+                <div class="tab-content">
+                    <!-- Finder Tab -->
+                    <div id="finder-tab" class="tab-pane active">
+                        <div class="content-header">
+                            <div>
+                                <h3>Peer Matching</h3>
+                                <p>AI-suggested partners based on your profile</p>
+                            </div>
+                            <button id="form-team-btn" class="btn btn-secondary">
+                                <span class="btn-icon">👥</span>
+                                <span class="btn-text">Form Team of 4</span>
+                            </button>
+                        </div>
+                        <div id="matches-container" class="matches-container">
+                            <!-- Matches -->
+                        </div>
+                    </div>
+
+                    <!-- Projects Tab -->
+                    <div id="projects-tab" class="tab-pane">
+                        <div class="content-header">
+                            <div>
+                                <h3>Project Hub</h3>
+                                <p>Browse and collaborate on innovative ideas</p>
+                            </div>
+                            <button id="create-project-btn" class="btn btn-primary">
+                                <span class="btn-icon">＋</span>
+                                <span class="btn-text">Post Project</span>
+                            </button>
+                        </div>
+                        <div id="projects-container" class="projects-container grid">
+                            <!-- Projects -->
+                        </div>
+                    </div>
                 </div>
             </section>
+
+            <!-- 5. Team View Modal / Section -->
+            <section id="team-section" class="section">
+                <div class="section-header">
+                    <h2>Your Complementary Team</h2>
+                    <p>A group of 4 where everyone fills each other's gaps</p>
+                </div>
+                <div id="team-container" class="team-grid">
+                    <!-- Team members -->
+                </div>
+                <div class="form-actions">
+                    <button id="team-back-btn" class="btn btn-secondary">Back to Finder</button>
+                </div>
+            </section>
+
+            <!-- 6. Create Project Modal (Hidden by default) -->
+            <div id="project-modal" class="modal">
+                <div class="modal-content auth-card">
+                    <div class="section-header">
+                        <h3>Post a Project</h3>
+                        <p>Share your idea and find the right help</p>
+                    </div>
+                    <form id="project-form">
+                        <div class="form-group">
+                            <label for="project-title">Title</label>
+                            <input type="text" id="project-title" required placeholder="e.g., Smart Irrigation App">
+                        </div>
+                        <div class="form-group">
+                            <label for="project-desc">Description</label>
+                            <textarea id="project-desc" required placeholder="What are you building?"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="project-stack">Required Stack / Skills</label>
+                            <input type="text" id="project-stack" required placeholder="e.g., React, Python, IoT">
+                        </div>
+                        <div class="modal-actions">
+                            <button type="button" id="close-project-modal" class="btn btn-secondary">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Post Idea</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
 
             <!-- Loading Overlay -->
             <div id="loading-overlay" class="loading-overlay">
                 <div class="loader"></div>
-                <p>Finding your perfect matches...</p>
+                <p id="loading-text">Processing...</p>
             </div>
         </main>
 
         <!-- Footer -->
         <footer class="footer">
-            <p>Powered by AI • Sentence Transformers • FastAPI</p>
+            <p>AI Peer Matcher & Project Hub v2.0 • RVCE Community</p>
         </footer>
     </div>
 

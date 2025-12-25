@@ -3,9 +3,11 @@ from typing import Optional, List
 import numpy as np
 
 
+from datetime import datetime
+
 class ProfileInput(BaseModel):
     """Input schema for creating a new student profile"""
-    id: str = Field(..., description="Unique student ID")
+    id: str = Field(..., description="Unique student ID (USN)")
     name: str = Field(..., description="Student name")
     strengths: str = Field(..., description="Subjects or topics the student excels at")
     weaknesses: str = Field(..., description="Subjects or topics the student needs help with")
@@ -26,3 +28,58 @@ class MatchResult(BaseModel):
     score: float
     strengths: str
     weaknesses: str
+
+
+class TeamResult(BaseModel):
+    """Schema for a team of complementary students"""
+    team_members: List[MatchResult]
+    overall_score: float
+
+
+# --- NEW MODELS ---
+
+class UserAuth(BaseModel):
+    """Schema for login/signup"""
+    id: str = Field(..., description="USN")
+    password: str = Field(..., description="Unique password")
+
+
+class UserInDB(BaseModel):
+    """Stored user credentials"""
+    id: str
+    hashed_password: str
+
+
+class Comment(BaseModel):
+    """Project comment"""
+    user_id: str
+    user_name: str
+    text: str
+    timestamp: datetime = Field(default_factory=datetime.utcnow)
+
+
+class ProjectBase(BaseModel):
+    title: str
+    description: str
+    stack: str
+
+
+class ProjectCreate(ProjectBase):
+    pass
+
+
+class Project(ProjectBase):
+    id: str
+    creator_id: str
+    creator_name: str
+    votes: int = 0
+    voted_by: List[str] = [] # List of user IDs who voted
+    comments: List[Comment] = []
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    
+    # Store embedding of the project description/stack for relevance matching
+    description_emb: Optional[List[float]] = None 
+
+
+class ProjectWithScore(Project):
+    relevance_score: float = 0.0
