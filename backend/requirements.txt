@@ -1,10 +1,3 @@
-# 🔥 Force CPU-only torch (this line MUST be first)
---index-url https://download.pytorch.org/whl/cpu
-torch==2.9.1
-
-# Reset index back to PyPI for everything else
---index-url https://pypi.org/simple
-
 fastapi==0.109.0
 uvicorn[standard]==0.27.0
 pydantic==2.5.3
