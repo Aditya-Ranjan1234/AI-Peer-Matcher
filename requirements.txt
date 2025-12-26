@@ -1,24 +1,23 @@
-# --- Force CPU-only PyTorch (prevents CUDA downloads) ---
---extra-index-url https://download.pytorch.org/whl/cpu
-torch==2.9.1+cpu
+# 🔥 Force CPU-only torch (this line MUST be first)
+--index-url https://download.pytorch.org/whl/cpu
+torch==2.9.1
 
-# --- Core API ---
+# Reset index back to PyPI for everything else
+--index-url https://pypi.org/simple
+
 fastapi==0.109.0
 uvicorn[standard]==0.27.0
 pydantic==2.5.3
 
-# --- Database ---
 motor==3.3.2
 pymongo==4.6.1
 dnspython==2.4.2
 
-# --- Auth & security ---
 python-dotenv==1.0.0
 python-multipart==0.0.6
 bcrypt==4.1.2
 python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
 
-# --- ML / NLP ---
 scikit-learn==1.4.0
 sentence-transformers==2.3.1

@@ -1,13 +1,23 @@
+# 🔥 Force CPU-only torch (this line MUST be first)
+--index-url https://download.pytorch.org/whl/cpu
+torch==2.9.1
+
+# Reset index back to PyPI for everything else
+--index-url https://pypi.org/simple
+
 fastapi==0.109.0
 uvicorn[standard]==0.27.0
 pydantic==2.5.3
+
 motor==3.3.2
 pymongo==4.6.1
 dnspython==2.4.2
+
 python-dotenv==1.0.0
-scikit-learn==1.4.0
-sentence-transformers==2.3.1
 python-multipart==0.0.6
 bcrypt==4.1.2
 python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
+
+scikit-learn==1.4.0
+sentence-transformers==2.3.1
