@@ -814,3 +814,64 @@ body::before {
         font-size: 0.75rem;
     }
 }
+
+/* Settings Tab Layout Improvement */
+#settings-tab.active {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+#settings-tab .settings-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    align-items: start;
+}
+
+#settings-tab .auth-card {
+    margin-top: 0 !important;
+    height: 100%;
+}
+
+@media (max-width: 850px) {
+    #settings-tab .settings-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Project Hub Enhancements */
+.hub-actions {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+#project-filter {
+    min-width: 250px;
+    transition: all 0.3s ease;
+}
+
+#project-filter:focus {
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+    outline: none;
+}
+
+.delete-project-btn {
+    transition: transform 0.2s ease, opacity 0.2s ease;
+    opacity: 0.7;
+}
+
+.delete-project-btn:hover {
+    transform: scale(1.2);
+    opacity: 1;
+}
+
+.tag {
+    transition: filter 0.2s ease;
+}
+
+.tag:hover {
+    filter: brightness(1.2);
+}

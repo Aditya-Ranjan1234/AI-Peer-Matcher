@@ -68,6 +68,7 @@ class ProjectBase(BaseModel):
     title: str
     description: str
     stack: str
+    tags: List[str] = []
 
 
 class ProjectCreate(ProjectBase):

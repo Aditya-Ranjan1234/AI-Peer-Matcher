@@ -164,10 +164,14 @@
                                 <h3>Project Hub</h3>
                                 <p>Browse and collaborate on innovative ideas</p>
                             </div>
-                            <button id="create-project-btn" class="btn btn-primary">
-                                <span class="btn-icon">＋</span>
-                                <span class="btn-text">Post Project</span>
-                            </button>
+                            <div class="hub-actions" style="display: flex; gap: 1rem; align-items: center;">
+                                <input type="text" id="project-filter" placeholder="Filter by tag..."
+                                    style="padding: 8px 12px; border-radius: 8px; border: 1px solid var(--bg-glass); background: var(--bg-secondary); color: white;">
+                                <button id="create-project-btn" class="btn btn-primary">
+                                    <span class="btn-icon">＋</span>
+                                    <span class="btn-text">Post Project</span>
+                                </button>
+                            </div>
                         </div>
                         <div id="projects-container" class="projects-container grid">
                             <!-- Projects -->
@@ -179,27 +183,64 @@
                         <div class="content-header">
                             <h3>Account Settings</h3>
                         </div>
-                        <div class="auth-card">
-                            <h4>Change Password</h4>
-                            <p style="color: var(--text-secondary); margin-bottom: 1rem; font-size: 0.9rem;">
-                                Update your account security.
-                            </p>
-                            <form id="change-password-form">
-                                <div class="form-group">
-                                    <label>Current Password</label>
-                                    <input type="password" id="old-password" required placeholder="••••••••">
-                                </div>
-                                <div class="form-group">
-                                    <label>New Password</label>
-                                    <input type="password" id="change-new-password" required
-                                        placeholder="Minimum 8 characters">
-                                </div>
-                                <div class="form-group">
-                                    <label>Confirm New Password</label>
-                                    <input type="password" id="confirm-new-password" required placeholder="••••••••">
-                                </div>
-                                <button type="submit" class="btn btn-primary btn-full">Update Password</button>
-                            </form>
+                        <div class="settings-grid">
+                            <div class="auth-card">
+                                <h4>Change Password</h4>
+                                <p style="color: var(--text-secondary); margin-bottom: 1rem; font-size: 0.9rem;">
+                                    Update your account security.
+                                </p>
+                                <form id="change-password-form">
+                                    <div class="form-group">
+                                        <label>Current Password</label>
+                                        <input type="password" id="old-password" required placeholder="••••••••">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>New Password</label>
+                                        <input type="password" id="change-new-password" required
+                                            placeholder="Minimum 8 characters">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Confirm New Password</label>
+                                        <input type="password" id="confirm-new-password" required
+                                            placeholder="••••••••">
+                                    </div>
+                                    <button type="submit" class="btn btn-primary btn-full">Update Password</button>
+                                </form>
+                            </div>
+
+                            <!-- Edit Profile Card -->
+                            <div class="auth-card">
+                                <h4>Update Profile</h4>
+                                <p style="color: var(--text-secondary); margin-bottom: 1rem; font-size: 0.9rem;">
+                                    Edit your strengths, needs, and preferences.
+                                </p>
+                                <form id="edit-profile-form">
+                                    <div class="form-group">
+                                        <label>Full Name</label>
+                                        <input type="text" id="edit-name" required>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label>Your Strengths</label>
+                                        <div class="checkbox-grid" id="edit-strengths-grid">
+                                            <!-- Populated via JS -->
+                                        </div>
+                                        <input type="text" id="edit-strengths-other" class="other-input"
+                                            placeholder="Other strengths (comma separated)">
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label>Areas You Need Help</label>
+                                        <div class="checkbox-grid" id="edit-weaknesses-grid">
+                                            <!-- Populated via JS -->
+                                        </div>
+                                        <input type="text" id="edit-weaknesses-other" class="other-input"
+                                            placeholder="Other needs (comma separated)">
+                                    </div>
+
+                                    <button type="submit" class="btn btn-primary btn-full">Save Profile Changes</button>
+                                </form>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -238,6 +279,10 @@
                         <div class="form-group">
                             <label for="project-stack">Required Stack / Skills</label>
                             <input type="text" id="project-stack" required placeholder="e.g., React, Python, IoT">
+                        </div>
+                        <div class="form-group">
+                            <label for="project-tags">Tags (comma separated)</label>
+                            <input type="text" id="project-tags" placeholder="e.g., AI, ML, Web3">
                         </div>
                         <div class="modal-actions">
                             <button type="button" id="close-project-modal" class="btn btn-secondary">Cancel</button>

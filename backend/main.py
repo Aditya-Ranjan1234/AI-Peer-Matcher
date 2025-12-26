@@ -180,6 +180,42 @@ async def get_all_profiles(collection = Depends(get_profiles_collection)):
     return {"total": len(profiles), "profiles": profiles}
 
 
+@app.get("/profiles/{student_id}")
+async def get_profile(student_id: str, collection = Depends(get_profiles_collection)):
+    profile = await collection.find_one({"id": student_id}, {"strengths_emb": 0, "weaknesses_emb": 0})
+    if not profile:
+        raise HTTPException(status_code=404, detail="Profile not found")
+    profile.pop("_id", None)
+    return profile
+
+@app.put("/profiles/{student_id}")
+async def update_profile(
+    student_id: str, 
+    profile: ProfileInput, 
+    collection = Depends(get_profiles_collection),
+    user_id: str = Depends(get_current_user_id)
+):
+    # Ensure user can only update their own profile
+    if student_id != user_id:
+        raise HTTPException(status_code=403, detail="You can only update your own profile")
+        
+    existing = await collection.find_one({"id": student_id})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Profile not found")
+
+    # Re-generate embeddings
+    strengths_emb = embedding_service.embed_text(profile.strengths)
+    weaknesses_emb = embedding_service.embed_text(profile.weaknesses)
+    
+    updated_data = profile.model_dump()
+    updated_data["strengths_emb"] = list(strengths_emb)
+    updated_data["weaknesses_emb"] = list(weaknesses_emb)
+    
+    await collection.update_one({"id": student_id}, {"$set": updated_data})
+    
+    return {"message": "Profile updated", "student_id": student_id}
+
+
 # ---------------------------------------------------------------------------
 # MATCHING (PEERS & TEAMS)
 # ---------------------------------------------------------------------------
@@ -253,6 +289,7 @@ async def create_project(
         "title": project_in.title,
         "description": project_in.description,
         "stack": project_in.stack,
+        "tags": project_in.tags,
         "votes": 0,
         "voted_by": [],
         "comments": [],
@@ -338,6 +375,22 @@ async def comment_project(
         {"$push": {"comments": comment}}
     )
     return {"message": "Comment added"}
+
+@app.delete("/projects/{project_id}")
+async def delete_project(
+    project_id: str,
+    user_id: str = Depends(get_current_user_id),
+    projects = Depends(get_projects_collection)
+):
+    project = await projects.find_one({"id": project_id})
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    if project["creator_id"] != user_id:
+        raise HTTPException(status_code=403, detail="You can only delete your own projects")
+    
+    await projects.delete_one({"id": project_id})
+    return {"message": "Project deleted"}
 
 # ---------------------------------------------------------------------------
 # Delete a profile

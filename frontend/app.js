@@ -73,11 +73,21 @@ const elements = {
     teamContainer: document.getElementById('team-container'),
     teamBackBtn: document.getElementById('team-back-btn'),
 
+    closeProjectModal: document.getElementById('close-project-modal'),
+
     // Projects
     createProjectBtn: document.getElementById('create-project-btn'),
     projectModal: document.getElementById('project-modal'),
     projectForm: document.getElementById('project-form'),
-    closeProjectModal: document.getElementById('close-project-modal')
+    projectFilter: document.getElementById('project-filter'),
+
+    // Settings / Edit Profile
+    editProfileForm: document.getElementById('edit-profile-form'),
+    editNameInput: document.getElementById('edit-name'),
+    editStrengthsGrid: document.getElementById('edit-strengths-grid'),
+    editWeaknessesGrid: document.getElementById('edit-weaknesses-grid'),
+    editStrengthsOther: document.getElementById('edit-strengths-other'),
+    editWeaknessesOther: document.getElementById('edit-weaknesses-other')
 };
 
 // --- Initialization ---
@@ -103,6 +113,14 @@ function populateGrids() {
     if (elements.weaknessesGrid) {
         elements.weaknessesGrid.innerHTML = SUBJECTS.map(s => createItem(s, 'weakness')).join('');
     }
+
+    // Also for edit grids
+    if (elements.editStrengthsGrid) {
+        elements.editStrengthsGrid.innerHTML = SUBJECTS.map(s => createItem(s, 'edit-strength')).join('');
+    }
+    if (elements.editWeaknessesGrid) {
+        elements.editWeaknessesGrid.innerHTML = SUBJECTS.map(s => createItem(s, 'edit-weakness')).join('');
+    }
 }
 
 // --- API Helpers ---
@@ -125,7 +143,17 @@ async function apiRequest(endpoint, options = {}) {
         const data = await response.json();
 
         if (!response.ok) {
-            throw new Error(data.detail || 'Something went wrong');
+            let errorMsg = 'Something went wrong';
+            if (data && data.detail) {
+                if (typeof data.detail === 'string') {
+                    errorMsg = data.detail;
+                } else if (Array.isArray(data.detail)) {
+                    errorMsg = data.detail.map(err => `${err.loc.join('.')}: ${err.msg}`).join(', ');
+                } else if (typeof data.detail === 'object') {
+                    errorMsg = JSON.stringify(data.detail);
+                }
+            }
+            throw new Error(errorMsg);
         }
 
         return data;
@@ -201,6 +229,7 @@ const App = {
 
         if (tabId === TABS.FINDER) this.loadMatches();
         else if (tabId === TABS.PROJECTS) this.loadProjects();
+        else if (tabId === TABS.SETTINGS) this.loadCurrentProfile();
     },
 
     async checkId() {
@@ -323,31 +352,50 @@ const App = {
     async loadProjects() {
         try {
             const data = await apiRequest('/projects');
-            this.renderProjects(data);
+            state.projects = data.projects || [];
+            this.renderProjects(state.projects);
         } catch (e) {
             console.error(e);
         }
     },
 
     renderProjects(projects) {
-        elements.projectsContainer.innerHTML = projects.length ? '' : '<p class="empty-state">No projects posted yet. Be the first!</p>';
-        projects.forEach(p => {
+        const filter = elements.projectFilter?.value.toLowerCase() || '';
+        const filtered = projects.filter(p => {
+            if (!filter) return true;
+            const tags = (p.tags || []).join(',').toLowerCase();
+            return tags.includes(filter) || p.title.toLowerCase().includes(filter);
+        });
+
+        elements.projectsContainer.innerHTML = filtered.length ? '' : '<p class="empty-state">No matching projects found.</p>';
+
+        filtered.forEach(p => {
             const card = document.createElement('div');
             card.className = 'project-card';
             const relevance = p.relevance_score ? Math.round(p.relevance_score * 100) : null;
+            const isCreator = p.creator_id === localStorage.getItem('userId');
 
             card.innerHTML = `
                 <div class="project-header">
-                    <h3>${p.title}</h3>
-                    ${relevance ? `<span class="relevance-badge">${relevance}% Match</span>` : ''}
+                    <div style="flex: 1">
+                        <h3 style="display: flex; align-items: center; gap: 10px;">
+                            ${p.title}
+                            ${isCreator ? `<span class="delete-project-btn" title="Delete Project" style="cursor: pointer; color: var(--error); font-size: 1rem;">🗑️</span>` : ''}
+                        </h3>
+                        ${relevance ? `<span class="relevance-badge">${relevance}% Match</span>` : ''}
+                    </div>
                 </div>
                 <p class="project-description">${p.description}</p>
                 <div class="project-stack">
-                    ${p.tech_stack.split(',').map(s => `<span class="tag">${s.trim()}</span>`).join('')}
+                    ${(p.stack || '').split(',').map(s => `<span class="tag">${s.trim()}</span>`).join('')}
                 </div>
+                ${p.tags && p.tags.length ? `
+                <div class="project-tags" style="margin-top: 5px; display: flex; gap: 5px; flex-wrap: wrap;">
+                    ${p.tags.map(t => `<span class="tag" style="background: rgba(99, 102, 241, 0.1); border-color: var(--accent-primary); font-size: 0.7rem;">${t}</span>`).join('')}
+                </div>` : ''}
                 <div class="project-footer">
                     <span class="project-creator">By ${p.creator_name}</span>
-                    <button class="vote-btn ${p.voted ? 'active' : ''}" data-id="${p.id}">
+                    <button class="vote-btn ${p.voted_by.includes(localStorage.getItem('userId')) ? 'active' : ''}" data-id="${p.id}">
                         <span>👍</span> <span>${p.votes}</span>
                     </button>
                 </div>
@@ -356,8 +404,27 @@ const App = {
             const voteBtn = card.querySelector('.vote-btn');
             voteBtn.onclick = () => this.voteProject(p.id);
 
+            if (isCreator) {
+                const delBtn = card.querySelector('.delete-project-btn');
+                delBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    if (confirm("Delete this project idea?")) {
+                        this.deleteProject(p.id);
+                    }
+                };
+            }
+
             elements.projectsContainer.appendChild(card);
         });
+    },
+
+    async deleteProject(projectId) {
+        try {
+            await apiRequest(`/projects/${projectId}`, { method: 'DELETE' });
+            this.loadProjects();
+        } catch (e) {
+            this.showError(e.message);
+        }
     },
 
     async voteProject(projectId) {
@@ -437,6 +504,86 @@ const App = {
         } finally {
             this.hideLoading();
         }
+    },
+
+    async loadCurrentProfile() {
+        const userId = localStorage.getItem('userId');
+        this.showLoading("Loading your profile...");
+        try {
+            const profile = await apiRequest(`/profiles/${encodeURIComponent(userId)}`);
+
+            // Fill Name
+            elements.editNameInput.value = profile.name;
+
+            // Fill Checkboxes
+            const strengths = profile.strengths.split(',').map(s => s.trim());
+            const weaknesses = profile.weaknesses.split(',').map(s => s.trim());
+
+            // Helper to check boxes
+            const checkBoxes = (gridId, list, otherInputId) => {
+                const checkboxes = document.querySelectorAll(`#${gridId} input[type="checkbox"]`);
+                const matched = [];
+                checkboxes.forEach(cb => {
+                    if (list.includes(cb.value)) {
+                        cb.checked = true;
+                        matched.push(cb.value);
+                    } else {
+                        cb.checked = false;
+                    }
+                });
+
+                // Find items in list not in checkboxes
+                const others = list.filter(item => !matched.includes(item));
+                document.getElementById(otherInputId).value = others.join(', ');
+            };
+
+            checkBoxes('edit-strengths-grid', strengths, 'edit-strengths-other');
+            checkBoxes('edit-weaknesses-grid', weaknesses, 'edit-weaknesses-other');
+
+        } catch (e) {
+            this.showError("Failed to load profile details");
+        } finally {
+            this.hideLoading();
+        }
+    },
+
+    async updateProfile(e) {
+        e.preventDefault();
+        const userId = localStorage.getItem('userId');
+
+        // Collect checkboxes
+        const getCheckboxes = (gridId) => Array.from(document.querySelectorAll(`#${gridId} input[type="checkbox"]:checked`)).map(c => c.value);
+        const strengths = getCheckboxes('edit-strengths-grid');
+        const weaknesses = getCheckboxes('edit-weaknesses-grid');
+
+        const otherStrengths = elements.editStrengthsOther.value.trim();
+        if (otherStrengths) strengths.push(...otherStrengths.split(',').map(s => s.trim()));
+
+        const otherWeaknesses = elements.editWeaknessesOther.value.trim();
+        if (otherWeaknesses) weaknesses.push(...otherWeaknesses.split(',').map(s => s.trim()));
+
+        const profileData = {
+            id: userId,
+            name: elements.editNameInput.value.trim(),
+            strengths: strengths.join(', '),
+            weaknesses: weaknesses.join(', '),
+            preferences: "",
+            description: ""
+        };
+
+        this.showLoading("Updating profile...");
+        try {
+            await apiRequest(`/profiles/${encodeURIComponent(userId)}`, {
+                method: 'PUT',
+                body: JSON.stringify(profileData)
+            });
+            alert("Profile updated successfully!");
+            this.switchTab(TABS.FINDER);
+        } catch (e) {
+            this.showError(e.message);
+        } finally {
+            this.hideLoading();
+        }
     }
 };
 
@@ -484,10 +631,12 @@ function setupEventListeners() {
 
     elements.projectForm.onsubmit = async (e) => {
         e.preventDefault();
+        const tags = document.getElementById('project-tags').value;
         const body = {
             title: document.getElementById('project-title').value,
             description: document.getElementById('project-desc').value,
-            tech_stack: document.getElementById('project-stack').value
+            stack: document.getElementById('project-stack').value,
+            tags: tags ? tags.split(',').map(t => t.trim()) : []
         };
 
         App.showLoading("Posting project...");
@@ -503,10 +652,19 @@ function setupEventListeners() {
         }
     };
 
+    // Filter listener
+    if (elements.projectFilter) {
+        elements.projectFilter.oninput = () => App.renderProjects(state.projects);
+    }
+
     // Settings
     const changePassForm = document.getElementById('change-password-form');
     if (changePassForm) {
         changePassForm.onsubmit = (e) => App.changePassword(e);
+    }
+
+    if (elements.editProfileForm) {
+        elements.editProfileForm.onsubmit = (e) => App.updateProfile(e);
     }
 }
 
