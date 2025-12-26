@@ -85,29 +85,43 @@ async def check_id(student_id: str, profiles = Depends(get_profiles_collection))
 # ---------------------------------------------------------------------------
 @app.post("/signup")
 async def signup(
-    user_data: UserAuth, 
+    user_data: UserAuth,  # Now accepts UserAuth which has id, name, etc.
     users = Depends(get_users_collection),
     profiles = Depends(get_profiles_collection)
 ):
-    # 1. Check if profile exists (must be a student in the system)
-    logger.info(f"Signup attempt for USN: '{user_data.id}'")
+    # 1. Check/Create Profile
     profile = await profiles.find_one({"id": user_data.id})
-    if not profile:
-        logger.warning(f"Profile not found for USN: '{user_data.id}' during signup")
-        # Try a case-insensitive check just in case
-        profile_case = await profiles.find_one({"id": {"$regex": f"^{user_data.id}$", "$options": "i"}})
-        if profile_case:
-            logger.info(f"Found profile with case-insensitive match: {profile_case['id']}")
-            user_data.id = profile_case["id"] # Sync the ID
-        else:
-            raise HTTPException(status_code=404, detail=f"Student ID '{user_data.id}' not found in records.")
     
-    # 2. Check if already registered
+    if not profile:
+        # If we have extra fields (from seeding), create the profile
+        if hasattr(user_data, 'name') and user_data.name:  
+             # Generate embeddings for new profile
+            desc_embedding = model.encode(user_data.description or "").tolist()
+            skills_text = f"{user_data.strengths} {user_data.weaknesses}"
+            skills_embedding = model.encode(skills_text).tolist()
+
+            new_profile = {
+                "id": user_data.id,
+                "name": user_data.name,
+                "strengths": user_data.strengths or "",
+                "weaknesses": user_data.weaknesses or "",
+                "preferences": user_data.preferences or "",
+                "description": user_data.description or "",
+                "embedding": desc_embedding,
+                "skills_embedding": skills_embedding
+            }
+            await profiles.insert_one(new_profile)
+            logger.info(f"Created new profile for {user_data.id}")
+        else:
+             # Basic signup without profile data - still require profile to exist?
+             pass
+
+    # 2. Check if user credentials already exist
     existing_user = await users.find_one({"id": user_data.id})
     if existing_user:
         raise HTTPException(status_code=400, detail="User already registered. Please login.")
-    
-    # 3. Create user
+
+    # 3. Create user auth entry
     hashed_pw = get_password_hash(user_data.password)
     new_user = {"id": user_data.id, "hashed_password": hashed_pw}
     await users.insert_one(new_user)

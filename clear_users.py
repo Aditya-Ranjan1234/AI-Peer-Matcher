@@ -1,41 +1,63 @@
+# clear_database.py
 import asyncio
 from motor.motor_asyncio import AsyncIOMotorClient
 import os
 from dotenv import load_dotenv
 
-load_dotenv()
-
-async def clear_users():
-    url = os.getenv('MONGODB_URL')
-    if not url:
-        # Try finding .env in the parent directory if not found (for common project structures)
+async def clear_database():
+    # Load environment variables
+    load_dotenv()
+    MONGODB_URL = os.getenv("MONGODB_URL")
+    
+    if not MONGODB_URL:
+        # Try parent directory's .env if not found
         load_dotenv('../.env')
-        url = os.getenv('MONGODB_URL')
+        MONGODB_URL = os.getenv("MONGODB_URL")
         
-    if not url:
+    if not MONGODB_URL:
         print("❌ Error: MONGODB_URL not found in .env")
         return
-        
-    client = AsyncIOMotorClient(url)
-    # Get database name from URL or default to 'peer_matcher'
-    db_name = url.split('/')[-1].split('?')[0] or "peer_matcher"
+
+    print("🔗 Connecting to database...")
+    client = AsyncIOMotorClient(MONGODB_URL)
+    db_name = MONGODB_URL.split('/')[-1].split('?')[0] or "peer_matcher"
     db = client[db_name]
-    coll = db["users"]
     
-    print(f"📡 Connecting to Database: {db_name}")
+    # Collections to clear
+    collections = {
+        "users": "User credentials",
+        "profiles": "User profiles",
+        "projects": "Projects",
+        "sessions": "Active sessions",
+        "matches": "Match history",
+        "teams": "Team formations"
+    }
     
-    # Count how many users exist
-    count = await coll.count_documents({})
-    print(f"🔍 Found {count} registered users in '{db_name}.users'")
-    
-    if count > 0:
-        result = await coll.delete_many({})
-        print(f"✅ Successfully deleted {result.deleted_count} user credentials.")
-        print("🚀 Users can now sign up again from scratch for their USNs.")
-    else:
-        print("💡 No user credentials found to delete.")
+    try:
+        # Get list of all collections
+        all_collections = await db.list_collection_names()
         
-    client.close() # Note: motor's client.close() is NOT an awaitable
+        # Clear each collection
+        for coll_name, description in collections.items():
+            if coll_name in all_collections:
+                result = await db[coll_name].delete_many({})
+                print(f"✅ Cleared {result.deleted_count} {description} from '{coll_name}'")
+            else:
+                print(f"ℹ️  Collection '{coll_name}' not found, skipping...")
+        
+        print("\n✨ Database cleared successfully!")
+        
+    except Exception as e:
+        print(f"❌ Error clearing database: {str(e)}")
+    finally:
+        client.close()
 
 if __name__ == "__main__":
-    asyncio.run(clear_users())
+    print("=== DATABASE CLEANUP TOOL ===")
+    print("WARNING: This will delete ALL data from the database!")
+    confirmation = input("Are you sure you want to continue? (yes/no): ").strip().lower()
+    
+    if confirmation == 'yes':
+        asyncio.run(clear_database())
+    else:
+        print("Operation cancelled.")
