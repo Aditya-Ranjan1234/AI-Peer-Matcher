@@ -86,6 +86,7 @@ function init() {
     populateGrids();
     setupEventListeners();
     checkAutoLogin();
+    App.startPolling();
 }
 
 function populateGrids() {
@@ -144,6 +145,38 @@ const App = {
 
     hideLoading() {
         elements.loadingOverlay.classList.remove('active');
+    },
+
+    // --- Status Polling Logic ---
+    async checkBackendStatus() {
+        const dot = document.querySelector('.status-dot');
+        const text = document.querySelector('.status-text');
+        const indicator = document.getElementById('backend-status');
+
+        try {
+            // Using a simple fetch with a short timeout to check connectivity
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+            const response = await fetch(API_BASE_URL + '/', { signal: controller.signal });
+            clearTimeout(timeoutId);
+
+            if (response.ok) {
+                indicator.className = 'status-indicator online';
+                text.textContent = 'Server: Online';
+            } else {
+                indicator.className = 'status-indicator offline';
+                text.textContent = 'Server: Starting...';
+            }
+        } catch (e) {
+            indicator.className = 'status-indicator offline';
+            text.textContent = 'Server: Offline';
+        }
+    },
+
+    startPolling() {
+        this.checkBackendStatus();
+        setInterval(() => this.checkBackendStatus(), 15000);
     },
 
     showError(msg, container = null) {
