@@ -114,12 +114,21 @@ function populateGrids() {
         elements.weaknessesGrid.innerHTML = SUBJECTS.map(s => createItem(s, 'weakness')).join('');
     }
 
-    // Also for edit grids
+    // Chip logic for edit grids
+    const createChip = (val) => `<div class="chip" data-value="${val}">${val}</div>`;
+
     if (elements.editStrengthsGrid) {
-        elements.editStrengthsGrid.innerHTML = SUBJECTS.map(s => createItem(s, 'edit-strength')).join('');
+        elements.editStrengthsGrid.innerHTML = SUBJECTS.map(s => createChip(s)).join('');
+        // Add click listeners
+        elements.editStrengthsGrid.querySelectorAll('.chip').forEach(chip => {
+            chip.onclick = () => chip.classList.toggle('selected');
+        });
     }
     if (elements.editWeaknessesGrid) {
-        elements.editWeaknessesGrid.innerHTML = SUBJECTS.map(s => createItem(s, 'edit-weakness')).join('');
+        elements.editWeaknessesGrid.innerHTML = SUBJECTS.map(s => createChip(s)).join('');
+        elements.editWeaknessesGrid.querySelectorAll('.chip').forEach(chip => {
+            chip.onclick = () => chip.classList.toggle('selected');
+        });
     }
 }
 
@@ -519,26 +528,26 @@ const App = {
             const strengths = profile.strengths.split(',').map(s => s.trim());
             const weaknesses = profile.weaknesses.split(',').map(s => s.trim());
 
-            // Helper to check boxes
-            const checkBoxes = (gridId, list, otherInputId) => {
-                const checkboxes = document.querySelectorAll(`#${gridId} input[type="checkbox"]`);
+            // Helper to check chips
+            const selectChips = (gridId, list, otherInputId) => {
+                const chips = document.querySelectorAll(`#${gridId} .chip`);
                 const matched = [];
-                checkboxes.forEach(cb => {
-                    if (list.includes(cb.value)) {
-                        cb.checked = true;
-                        matched.push(cb.value);
+                chips.forEach(chip => {
+                    if (list.includes(chip.dataset.value)) {
+                        chip.classList.add('selected');
+                        matched.push(chip.dataset.value);
                     } else {
-                        cb.checked = false;
+                        chip.classList.remove('selected');
                     }
                 });
 
-                // Find items in list not in checkboxes
+                // Find items in list not in chips
                 const others = list.filter(item => !matched.includes(item));
                 document.getElementById(otherInputId).value = others.join(', ');
             };
 
-            checkBoxes('edit-strengths-grid', strengths, 'edit-strengths-other');
-            checkBoxes('edit-weaknesses-grid', weaknesses, 'edit-weaknesses-other');
+            selectChips('edit-strengths-grid', strengths, 'edit-strengths-other');
+            selectChips('edit-weaknesses-grid', weaknesses, 'edit-weaknesses-other');
 
         } catch (e) {
             this.showError("Failed to load profile details");
@@ -551,10 +560,10 @@ const App = {
         e.preventDefault();
         const userId = localStorage.getItem('userId');
 
-        // Collect checkboxes
-        const getCheckboxes = (gridId) => Array.from(document.querySelectorAll(`#${gridId} input[type="checkbox"]:checked`)).map(c => c.value);
-        const strengths = getCheckboxes('edit-strengths-grid');
-        const weaknesses = getCheckboxes('edit-weaknesses-grid');
+        // Collect chips
+        const getSelectedChips = (gridId) => Array.from(document.querySelectorAll(`#${gridId} .chip.selected`)).map(c => c.dataset.value);
+        const strengths = getSelectedChips('edit-strengths-grid');
+        const weaknesses = getSelectedChips('edit-weaknesses-grid');
 
         const otherStrengths = elements.editStrengthsOther.value.trim();
         if (otherStrengths) strengths.push(...otherStrengths.split(',').map(s => s.trim()));
