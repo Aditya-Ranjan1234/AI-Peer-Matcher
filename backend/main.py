@@ -17,7 +17,7 @@ from matcher import (
 from database import get_db
 from auth import (
     get_password_hash, verify_password, create_access_token, 
-    get_current_user_id
+    get_current_user_id, get_current_user_optional
 )
 
 # Configure logging
@@ -292,8 +292,9 @@ async def create_project(
 ):
     user_profile = await profiles.find_one({"id": user_id})
     
-    # Generate embedding for project description + stack to help matching
-    combined_text = f"{project_in.description} {project_in.stack}"
+    # Generate embedding for project description + stack + tags to help matching
+    tags_str = " ".join(project_in.tags)
+    combined_text = f"{project_in.title} {project_in.description} {project_in.stack} {tags_str}"
     desc_emb = embedding_service.embed_text(combined_text)
     
     project_doc = {
@@ -316,7 +317,7 @@ async def create_project(
 
 @app.get("/projects")
 async def list_projects(
-    user_id: Optional[str] = None, # Optional user ID for relevance scoring
+    user_id: Optional[str] = Depends(get_current_user_optional),
     projects = Depends(get_projects_collection),
     profiles = Depends(get_profiles_collection)
 ):
@@ -332,13 +333,17 @@ async def list_projects(
         
         # Calculate relevance score if user is logged in
         relevance = 0.0
+        creator_id = doc.get("creator_id")
+
         if user_profile and "strengths_emb" in user_profile and "description_emb" in doc:
-            relevance = calculate_project_relevance(
-                user_profile["strengths_emb"], 
-                doc["description_emb"]
-            )
+            # Only show score if NOT the owner
+            if user_id != creator_id:
+                relevance = calculate_project_relevance(
+                    user_profile["strengths_emb"], 
+                    doc["description_emb"]
+                )
         
-        doc["relevance_score"] = round(relevance, 4)
+        doc["relevance_score"] = round(relevance * 100, 0)
         results.append(doc)
         
     return {"total": len(results), "projects": results}

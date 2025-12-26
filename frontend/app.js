@@ -381,17 +381,21 @@ const App = {
         filtered.forEach(p => {
             const card = document.createElement('div');
             card.className = 'project-card';
-            const relevance = p.relevance_score ? Math.round(p.relevance_score * 100) : null;
+            const relevance = p.relevance_score; // Backend now sends 0-100
             const isCreator = p.creator_id === localStorage.getItem('userId');
+
+            let badgeClass = 'relevance-low';
+            if (relevance >= 80) badgeClass = 'relevance-high';
+            else if (relevance >= 50) badgeClass = 'relevance-med';
 
             card.innerHTML = `
                 <div class="project-header">
-                    <div style="flex: 1">
+                    <div style="flex: 1; display: flex; justify-content: space-between; align-items: flex-start;">
                         <h3 style="display: flex; align-items: center; gap: 10px;">
                             ${p.title}
                             ${isCreator ? `<span class="delete-project-btn" title="Delete Project" style="cursor: pointer; color: var(--error); font-size: 1rem;">🗑️</span>` : ''}
                         </h3>
-                        ${relevance ? `<span class="relevance-badge">${relevance}% Match</span>` : ''}
+                        ${(relevance && !isCreator) ? `<span class="relevance-badge ${badgeClass}">${relevance}% Match</span>` : ''}
                     </div>
                 </div>
                 <p class="project-description">${p.description}</p>

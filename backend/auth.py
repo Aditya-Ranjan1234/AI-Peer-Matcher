@@ -51,3 +51,11 @@ async def get_current_user_id(token: str = Depends(oauth2_scheme)):
         return user_id
     except JWTError:
         raise credentials_exception
+
+async def get_current_user_optional(token: Optional[str] = Depends(oauth2_scheme)) -> Optional[str]:
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        user_id: str = payload.get("sub")
+        return user_id
+    except (JWTError, AttributeError):
+        return None

@@ -876,6 +876,47 @@ body::before {
     filter: brightness(1.2);
 }
 
+/* Project Relevance Badge */
+.relevance-badge {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    padding: 0.3rem 0.8rem;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #fff;
+    backdrop-filter: blur(4px);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    z-index: 10;
+}
+
+.relevance-high {
+    background: rgba(16, 185, 129, 0.2);
+    /* Green */
+    border: 1px solid rgba(16, 185, 129, 0.4);
+    color: #34d399;
+}
+
+.relevance-med {
+    background: rgba(245, 158, 11, 0.2);
+    /* Amber */
+    border: 1px solid rgba(245, 158, 11, 0.4);
+    color: #fbbf24;
+}
+
+.relevance-low {
+    background: rgba(99, 102, 241, 0.2);
+    /* Indigo (Default) */
+    border: 1px solid rgba(99, 102, 241, 0.4);
+    color: #818cf8;
+}
+
+.project-card {
+    position: relative;
+    /* Ensure badge positioning works */
+}
+
 /* Streamlit-style Chip Selection */
 .chip-container {
     display: flex;
