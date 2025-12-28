@@ -395,7 +395,7 @@ const App = {
                             ${p.title}
                             ${isCreator ? `<span class="delete-project-btn" title="Delete Project" style="cursor: pointer; color: var(--error); font-size: 1rem;">🗑️</span>` : ''}
                         </h3>
-                        ${(relevance && !isCreator) ? `<span class="relevance-badge ${badgeClass}">${relevance}% Match</span>` : ''}
+                        ${(relevance !== undefined && relevance !== null && !isCreator) ? `<span class="relevance-badge ${badgeClass}">${relevance}% Match</span>` : ''}
                     </div>
                 </div>
                 <p class="project-description">${p.description}</p>
