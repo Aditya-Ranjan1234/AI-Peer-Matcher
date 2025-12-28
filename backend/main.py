@@ -298,7 +298,7 @@ async def create_project(
     combined_text = f"{project_in.title} {project_in.description} {project_in.stack} {tags_str}"
     desc_emb = embedding_service.embed_text(combined_text)
     logger.info(f"Project '{project_in.title}' description embedding: {desc_emb[:5]}...")  # print first 5 dims
-
+    print(f"Project '{project_in.title}' description embedding: {desc_emb[:5]}...")
     project_doc = {
         "id": str(uuid.uuid4()),
         "creator_id": user_id,
@@ -342,6 +342,8 @@ async def list_projects(
             if user_id != creator_id:
                 logger.info(f"User profile strengths embedding: {user_profile.get('strengths_emb', [])[:5]}...")
                 logger.info(f"Project description embedding from DB: {doc.get('description_emb', [])[:5]}...")
+                print(f"User profile strengths embedding: {user_profile.get('strengths_emb', [])[:5]}...")
+                print(f"Project description embedding from DB: {doc.get('description_emb', [])[:5]}...")
                 relevance = calculate_project_relevance(
                     user_profile["strengths_emb"], 
                     doc["description_emb"]
