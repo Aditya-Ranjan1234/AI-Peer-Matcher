@@ -94,12 +94,13 @@ async def signup(
     
     if not profile:
         # If we have extra fields (from seeding), create the profile
+        print(f"DEBUG: Processing signup for {user_data.id}. hasattr(name)={hasattr(user_data, 'name')}, name={getattr(user_data, 'name', 'N/A')}")
         if hasattr(user_data, 'name') and user_data.name:  
              # Generate embeddings for new profile
-            desc_embedding = model.encode(user_data.description or "").tolist()
-            skills_text = f"{user_data.strengths} {user_data.weaknesses}"
-            skills_embedding = model.encode(skills_text).tolist()
-
+            service = EmbeddingService()
+            strengths_emb = service.embed_text(user_data.strengths or "")
+            weaknesses_emb = service.embed_text(user_data.weaknesses or "")
+            
             new_profile = {
                 "id": user_data.id,
                 "name": user_data.name,
@@ -107,8 +108,8 @@ async def signup(
                 "weaknesses": user_data.weaknesses or "",
                 "preferences": user_data.preferences or "",
                 "description": user_data.description or "",
-                "embedding": desc_embedding,
-                "skills_embedding": skills_embedding
+                "strengths_emb": strengths_emb,
+                "weaknesses_emb": weaknesses_emb
             }
             await profiles.insert_one(new_profile)
             logger.info(f"Created new profile for {user_data.id}")

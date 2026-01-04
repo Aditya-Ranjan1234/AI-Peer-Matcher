@@ -178,6 +178,39 @@ def find_team_of_4(
     """
     if student_id not in profiles:
         return [], 0.0
+
+    # Check for fixed teams assignment
+    try:
+        # Assuming fixed_teams.json is in project root (parent of backend)
+        fixed_teams_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'fixed_teams.json')
+        if os.path.exists(fixed_teams_path):
+            import json
+            with open(fixed_teams_path, 'r') as f:
+                fixed_map = json.load(f)
+            
+            if student_id in fixed_map:
+                logger.info(f"Using fixed team for {student_id}")
+                assignment = fixed_map[student_id]
+                team_members_ids = assignment["team_members"]
+                
+                team_profiles = []
+                for mid in team_members_ids:
+                    if mid in profiles:
+                        team_profiles.append(profiles[mid])
+                
+                # Format result
+                result_members = []
+                for p in team_profiles:
+                    result_members.append({
+                        "student_id": p['id'],
+                        "name": p['name'],
+                        "score": assignment["score"], 
+                        "strengths": p['strengths'],
+                        "weaknesses": p['weaknesses']
+                    })
+                return result_members, assignment["score"]
+    except Exception as e:
+        logger.error(f"Error loading fixed teams: {e}")
     
     team_ids = [student_id]
     # Keep track of profiles for the result

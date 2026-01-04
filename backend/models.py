@@ -42,6 +42,13 @@ class UserAuth(BaseModel):
     """Schema for login/signup"""
     id: str = Field(..., description="USN")
     password: str = Field(..., description="Unique password")
+    
+    # Optional fields for signup-with-profile
+    name: Optional[str] = None
+    strengths: Optional[str] = None
+    weaknesses: Optional[str] = None
+    preferences: Optional[str] = None
+    description: Optional[str] = None
 
 
 class PasswordChange(BaseModel):
