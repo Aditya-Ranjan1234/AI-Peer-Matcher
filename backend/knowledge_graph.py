@@ -16,17 +16,22 @@ class KnowledgeGraphService:
         "fastapi": {"web development", "backend", "python", "api"},
         "django": {"web development", "backend", "python"},
         "flask": {"web development", "backend", "python"},
-        "react": {"web development", "frontend", "javascript"},
+        "react": {"web development", "frontend", "javascript", "ui/ux"},
         "node.js": {"web development", "backend", "javascript"},
         "javascript": {"programming", "frontend", "web development"},
+        "typescript": {"programming", "frontend", "web development"},
         "html": {"web development", "frontend"},
         "css": {"web development", "frontend"},
+        "tailwind": {"web development", "frontend", "css"},
+        "bootstrap": {"web development", "frontend", "css"},
         
         # Programming Languages
         "python": {"programming", "data science", "ai", "backend"},
         "c++": {"programming", "system programming"},
         "java": {"programming", "backend", "enterprise"},
         "c": {"programming", "system programming"},
+        "rust": {"programming", "system programming"},
+        "go": {"programming", "backend"},
         
         # AI & Data Science
         "machine learning": {"ai", "data science", "statistics", "mathematics"},
@@ -34,6 +39,7 @@ class KnowledgeGraphService:
         "data science": {"ai", "statistics", "programming", "data analysis"},
         "statistics": {"mathematics", "data science"},
         "neural networks": {"ai", "deep learning"},
+        "nlp": {"ai", "machine learning"},
         
         # Core Engineering & Science
         "mathematics": {"science", "engineering"},
@@ -53,11 +59,19 @@ class KnowledgeGraphService:
         "material research": {"science", "research"},
         "analysis": set(),
         
+        # Database
+        "mongodb": {"database", "backend"},
+        "sql": {"database", "backend"},
+        "postgresql": {"database", "backend", "sql"},
+        "database": set(),
+        
         # General Categories (Root Nodes)
         "web development": set(),
         "programming": set(),
         "ai": set(),
-        "science": set()
+        "science": set(),
+        "backend": set(),
+        "frontend": set()
     }
 
     def _extract_entities(self, text: str) -> Set[str]:
@@ -68,11 +82,13 @@ class KnowledgeGraphService:
         found = set()
         text_lower = text.lower()
         
-        # Check for each key in ontology using regex for word boundaries
+        # Check for each key in ontology using robust boundaries
+        # Pad text with spaces to simplify boundary matching
+        padded_text = f" {text_lower} "
         for skill in self.ONTOLOGY.keys():
-            # Escape skill for regex (e.g. c++)
-            pattern = r'\b' + re.escape(skill) + r'\b'
-            if re.search(pattern, text_lower):
+            # Match skill surrounded by common delimiters
+            pattern = r'[ \s,.;:!?/]' + re.escape(skill) + r'[ \s,.;:!?/]'
+            if re.search(pattern, padded_text):
                 found.add(skill)
         
         return found

@@ -400,22 +400,10 @@ const App = {
 
             card.innerHTML = `
                 <div class="project-header">
-                    <h3 style="display: flex; align-items: center; gap: 10px; flex: 1; margin-right: 10px;">
-                        ${p.title}
-                        ${isCreator ? `<span class="delete-project-btn" title="Delete Project" style="cursor: pointer; color: var(--error); font-size: 1rem;">🗑️</span>` : ''}
+                    <h3 style="display: flex; align-items: start; gap: 10px; flex: 1; min-width: 200px; margin: 0; font-size: 1.1rem; line-height: 1.4;">
+                        <span style="flex: 1;">${p.title}</span>
+                        ${isCreator ? `<span class="delete-project-btn" title="Delete Project" style="cursor: pointer; color: var(--error); font-size: 1.1rem; padding-top: 2px;">🗑️</span>` : ''}
                     </h3>
-                    <div style="display: flex; gap: 8px; flex-shrink: 0;">
-                        ${(!isCreator) ? `
-                            <div class="relevance-badge nlp" title="AI Match">
-                                <span>${p.relevance_score}%</span>
-                                <span style="font-size: 0.5rem">AI</span>
-                            </div>
-                            <div class="relevance-badge graph" title="Graph Match">
-                                <span>${p.graph_score}%</span>
-                                <span style="font-size: 0.5rem">Graph</span>
-                            </div>
-                        ` : ''}
-                    </div>
                 </div>
                 <p class="project-description">${p.description}</p>
                 <div class="project-stack">
@@ -424,14 +412,29 @@ const App = {
                 ${p.tags && p.tags.length ? `
                 <div class="project-tags" style="margin-top: 5px; display: flex; gap: 5px; flex-wrap: wrap;">
                     ${p.tags.map(t => `<span class="tag" style="background: rgba(99, 102, 241, 0.1); border-color: var(--accent-primary); font-size: 0.7rem;">${t}</span>`).join('')}
-                </div>` : ''}
+                </div>` : ''
+                }
                 <div class="project-footer">
-                    <span class="project-creator">By ${p.creator_name}</span>
+                    <div class="footer-left">
+                        <span class="project-creator">By ${p.creator_name}</span>
+                        <div class="footer-scores">
+                            ${(!isCreator) ? `
+                                <div class="relevance-badge nlp" title="AI Semantic Match">
+                                    <span style="font-size: 0.9rem">${p.relevance_score}%</span>
+                                    <span style="font-size: 0.55rem; opacity: 0.8;">AI</span>
+                                </div>
+                                <div class="relevance-badge graph" title="Graph Concept Match">
+                                    <span style="font-size: 0.9rem">${p.graph_score}%</span>
+                                    <span style="font-size: 0.55rem; opacity: 0.8;">GRAPH</span>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
                     <button class="vote-btn ${p.voted_by.includes(localStorage.getItem('userId')) ? 'active' : ''}" data-id="${p.id}">
                         <span>👍</span> <span>${p.votes}</span>
                     </button>
                 </div>
-            `;
+`;
 
             const voteBtn = card.querySelector('.vote-btn');
             voteBtn.onclick = () => this.voteProject(p.id);
@@ -452,7 +455,7 @@ const App = {
 
     async deleteProject(projectId) {
         try {
-            await apiRequest(`/projects/${projectId}`, { method: 'DELETE' });
+            await apiRequest(`/ projects / ${projectId} `, { method: 'DELETE' });
             this.loadProjects();
         } catch (e) {
             this.showError(e.message);
@@ -461,7 +464,7 @@ const App = {
 
     async voteProject(projectId) {
         try {
-            await apiRequest(`/projects/${projectId}/vote`, { method: 'POST' });
+            await apiRequest(`/ projects / ${projectId}/vote`, { method: 'POST' });
             this.loadProjects();
         } catch (e) {
             this.showError(e.message);
