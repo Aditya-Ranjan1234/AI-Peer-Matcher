@@ -17,12 +17,17 @@ The matching system is built on the concept of **Complementary Skill Alignment**
 Instead of simple keyword matching, the system converts text into high-dimensional vectors (embeddings) using a pre-trained Transformer model. This allows the system to understand that "Python coding" is semantically similar to "Back-end development".
 
 ### Complementary Scoring
-The algorithm calculates a "Complementary Score" between User A and User B:
-1. **Directional Match 1**: Similarity between User A's **Strengths** and User B's **Weaknesses**.
-2. **Directional Match 2**: Similarity between User B's **Strengths** and User A's **Weaknesses**.
-3. **Aggregated Score**: The average of these two directions.
+This ensure that the pair can effectively help each other fill their knowledge gaps.
 
-This ensures that the pair can effectively help each other fill their knowledge gaps.
+### 3.2. Knowledge Graph Matching
+While semantic embeddings capture the "vibe" of skills, the **Knowledge Graph (KG)** captures the "structure".
+
+- **Ontology**: A pre-defined hierarchy of skills (e.g., `React` -> `Frontend` -> `Web Development`).
+- **Entity Extraction**: Using regex-based NER to identify specific nodes from raw user text.
+- **Node Expansion**: When a skill is identified, the system automatically expands it to include its parent and related nodes in the graph.
+- **Jaccard Similarity**: The graph score is calculated based on the intersection vs. union of expanded node sets from two users.
+
+This allows the system to match a "React Developer" with a "Web Design" student even if their text embeddings are slightly different.
 
 ## 4. Team Formation (Teams of 4)
 The system supports two modes of team formation:
@@ -40,8 +45,9 @@ For specific high-priority user groups, the system supports **Pre-calculated Opt
 
 ## 5. Project Relevance Scoring
 The Project Hub doesn't just list projects; it ranks them based on individual fit.
-- **Mechanism**: The system calculates the cosine similarity between a user's **Strengths Embedding** and the **Project Description Embedding**.
-- **User Benefit**: Students see a "Relevance Score" on each project, helping them identify opportunities where their skills are most needed.
+- **AI Relevance**: Cosine similarity between user strengths and project description.
+- **Graph Relevance**: Concept overlap between user skills and project stack.
+- **Dual Display**: Users see both an "AI %" and a "Graph %", highlighting projects that are both contextually and technically relevant.
 
 ## 6. Technical Stack Details
 - **FastAPI**: Used for its speed and native support for asynchronous MongoDB operations (via Motor).

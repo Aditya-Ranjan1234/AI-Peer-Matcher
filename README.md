@@ -4,18 +4,19 @@ An intelligent matchmaking system that pairs students with complementary strengt
 
 ## 🚀 Features
 
-- **Semantic Matching**: Uses Sentence Transformers for deep semantic understanding of student profiles
-- **Complementary Scoring**: Matches students who can mutually help each other
-- **Modern UI**: Premium dark-themed interface with glassmorphism effects
-- **REST API**: FastAPI-powered backend with automatic validation
-- **Real-time Matching**: Instant match computation with similarity scores
+- **Hybrid Matching Engine**: Combines **NLP Semantic Analysis** with a structured **Knowledge Graph** to understand both context and skill relationships.
+- **Dual Matching Scores**: View both "AI Match" (sentiment/context) and "Graph Match" (structural skill overlap) for every pairing.
+- **Modern UI**: Premium dark-themed interface with glassmorphism effects and dynamic score badges.
+- **REST API**: FastAPI-powered backend with automatic validation and Knowledge Graph integration.
+- **Project Relevance Hub**: Find projects that fit your skills using a combination of semantic and structural relevance.
 
 ## 🛠️ Technology Stack
 
 - **Backend**: FastAPI (Python)
-- **NLP**: Sentence Transformers (`all-MiniLM-L6-v2`)
+- **NLP Engine**: Sentence Transformers (`all-MiniLM-L6-v2`)
+- **Knowledge Graph**: Custom Ontology-based Graph Matching Service
 - **Frontend**: Vanilla HTML/CSS/JavaScript
-- **Matching**: Cosine similarity with bidirectional scoring
+- **Matching Algorithm**: Hybrid (NLP Cosine Similarity + Graph Jaccard Similarity)
 
 ## 📋 Prerequisites
 
@@ -170,7 +171,8 @@ peer matcher/
 ├── backend/
 │   ├── main.py             # FastAPI application
 │   ├── models.py           # Pydantic schemas
-│   ├── matcher.py          # NLP & matching logic
+│   ├── matcher.py          # Core matching engine
+│   ├── knowledge_graph.py  # Knowledge Graph service & Ontology
 │   └── requirements.txt    # Python dependencies
 ├── frontend/
 │   ├── index.html          # Main UI
@@ -220,23 +222,19 @@ git push heroku main
 
 ## 🧠 How It Works
 
-### Matching Algorithm
+### Hybrid Matching Algorithm
 
-1. **Embedding Generation**:
-   - Each student's strengths and weaknesses are converted to 384-dimensional vectors using Sentence Transformers
-   - The model understands semantic meaning (e.g., "Math" and "Mathematics" are similar)
+1. **Semantic Layer (NLP)**:
+   - Strengths and weaknesses are converted to 384-dimensional vectors.
+   - Measures "contextual similarity" (e.g., "Designing UIs" and "Front-end engineering").
 
-2. **Complementary Scoring**:
-   ```
-   score = (similarity(A.strengths, B.weaknesses) + similarity(B.strengths, A.weaknesses)) / 2
-   ```
-   - Measures how well students can help each other
-   - Bidirectional: both students should benefit
+2. **Graph Layer (Knowledge Graph)**:
+   - Uses a structured ontology to find direct relationships between skills.
+   - Maps specific tools (e.g., "FastAPI") to parent categories ("Web Development").
+   - Measures "structural overlap" using expanded node sets.
 
-3. **Ranking**:
-   - All candidates are scored against the target student
-   - Results sorted by score (highest first)
-   - Top K matches returned
+3. **Combined Scoring**:
+   - Every match provides two scores, allowing users to see both how well they fit contextually and how their practical skills align.
 
 ## 🎨 UI Features
 
