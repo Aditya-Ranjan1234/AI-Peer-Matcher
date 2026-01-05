@@ -26,6 +26,7 @@ class MatchResult(BaseModel):
     student_id: str
     name: str
     score: float
+    graph_score: float
     strengths: str
     weaknesses: str
 
@@ -97,3 +98,4 @@ class Project(ProjectBase):
 
 class ProjectWithScore(Project):
     relevance_score: float = 0.0
+    graph_score: float = 0.0

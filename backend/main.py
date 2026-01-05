@@ -256,7 +256,14 @@ async def get_matches(
         "student_id": student_id,
         "student_name": target["name"],
         "matches": [
-            {"student_id": m[0], "name": m[1], "score": round(m[2], 4), "strengths": m[3], "weaknesses": m[4]} 
+            {
+                "student_id": m[0], 
+                "name": m[1], 
+                "score": round(m[2], 4), 
+                "graph_score": round(m[3], 4),
+                "strengths": m[4], 
+                "weaknesses": m[5]
+            } 
             for m in matches
         ]
     }
@@ -336,21 +343,25 @@ async def list_projects(
         
         # Calculate relevance score if user is logged in
         relevance = 0.0
+        g_relevance = 0.0
         creator_id = doc.get("creator_id")
 
         if user_profile and "strengths_emb" in user_profile and "description_emb" in doc:
             # Only show score if NOT the owner
             if user_id != creator_id:
-                logger.info(f"User profile strengths embedding: {user_profile.get('strengths_emb', [])[:5]}...")
-                logger.info(f"Project description embedding from DB: {doc.get('description_emb', [])[:5]}...")
-                print(f"User profile strengths embedding: {user_profile.get('strengths_emb', [])[:5]}...")
-                print(f"Project description embedding from DB: {doc.get('description_emb', [])[:5]}...")
-                relevance = calculate_project_relevance(
+                # Use raw text for KG matching
+                u_strengths = user_profile.get("strengths", "")
+                p_desc = doc.get("description", "")
+                
+                relevance, g_relevance = calculate_project_relevance(
                     user_profile["strengths_emb"], 
-                    doc["description_emb"]
+                    doc["description_emb"],
+                    u_strengths,
+                    p_desc
                 )
         
         doc["relevance_score"] = round(relevance * 100, 0)
+        doc["graph_score"] = round(g_relevance * 100, 0)
         results.append(doc)
         
     return {"total": len(results), "projects": results}

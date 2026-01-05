@@ -9,10 +9,12 @@ import numpy as np
 from typing import List, Dict, Tuple
 import logging
 import os
+from knowledge_graph import KnowledgeGraphService
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
 
 
 class EmbeddingService:
@@ -53,6 +55,11 @@ class EmbeddingService:
         model = self.get_model()
         embedding = model.encode(text.strip(), convert_to_numpy=True)
         return embedding.tolist()
+
+
+# Initialize services
+embedding_service = EmbeddingService()
+kg_service = KnowledgeGraphService()
 
 
 def cosine_sim(vec1: List[float], vec2: List[float]) -> float:
@@ -132,7 +139,7 @@ def find_best_matches(
     student_id: str,
     profiles: Dict[str, Dict],
     top_k: int = 3
-) -> List[Tuple[str, str, float, str, str]]:
+) -> List[Tuple[str, str, float, float, str, str]]:
     """
     Find the best matching students for a given student
     
@@ -142,7 +149,7 @@ def find_best_matches(
         top_k: Number of top matches to return
         
     Returns:
-        List of tuples: (student_id, name, score, strengths, weaknesses)
+        List of tuples: (student_id, name, nlp_score, graph_score, strengths, weaknesses)
     """
     if student_id not in profiles:
         return []
@@ -154,16 +161,19 @@ def find_best_matches(
         if pid == student_id:
             continue  # Skip self
         
-        score = complementary_score(target_student, profile)
+        nlp_score = complementary_score(target_student, profile)
+        graph_score = kg_service.get_complementary_graph_score(target_student, profile)
+        
         scores.append((
             pid,
             profile['name'],
-            score,
+            nlp_score,
+            graph_score,
             profile['strengths'],
             profile['weaknesses']
         ))
     
-    # Sort by score (descending) and return top K
+    # Sort by nlp_score (descending) and return top K
     scores.sort(key=lambda x: x[2], reverse=True)
     return scores[:top_k]
 
@@ -201,10 +211,15 @@ def find_team_of_4(
                 # Format result
                 result_members = []
                 for p in team_profiles:
+                    # For fixed teams, we might not have graph_score in the file, 
+                    # so we calculate it on the fly if needed, or just set to 0.0
+                    g_score = kg_service.get_complementary_graph_score(profiles[student_id], p) if p['id'] != student_id else 0.0
+                    
                     result_members.append({
                         "student_id": p['id'],
                         "name": p['name'],
                         "score": assignment["score"], 
+                        "graph_score": g_score,
                         "strengths": p['strengths'],
                         "weaknesses": p['weaknesses']
                     })
@@ -253,10 +268,13 @@ def find_team_of_4(
     # Convert to standard format for frontend
     result_members = []
     for p in team_profiles:
+        g_score = kg_service.get_complementary_graph_score(profiles[student_id], p) if p['id'] != student_id else 0.0
+        
         result_members.append({
             "student_id": p['id'],
             "name": p['name'],
-            "score": overall_score, # For simplicity, each gets the team score
+            "score": overall_score, 
+            "graph_score": g_score,
             "strengths": p['strengths'],
             "weaknesses": p['weaknesses']
         })
@@ -266,15 +284,20 @@ def find_team_of_4(
 
 def calculate_project_relevance(
     user_strengths_emb: List[float],
-    project_desc_emb: List[float]
-) -> float:
+    project_desc_emb: List[float],
+    user_strengths_text: str = "",
+    project_desc_text: str = ""
+) -> Tuple[float, float]:
     """
-    Calculate how relevant a project is to a user's strengths.
-    Uses cosine similarity between strengths and project description.
+    Calculate project relevance using both NLP and Knowledge Graph.
     """
-    if not user_strengths_emb or not project_desc_emb:
-        return 0.0
+    nlp_score = 0.0
+    if user_strengths_emb and project_desc_emb:
+        sim = cosine_sim(user_strengths_emb, project_desc_emb)
+        nlp_score = max(0.0, (sim + 1.0) / 2.0)
         
-    score = cosine_sim(user_strengths_emb, project_desc_emb)
-    # Map from [-1, 1] to [0, 1]
-    return max(0.0, (score + 1.0) / 2.0)
+    graph_score = 0.0
+    if user_strengths_text and project_desc_text:
+        graph_score = kg_service.calculate_graph_score(user_strengths_text, project_desc_text)
+        
+    return nlp_score, graph_score
