@@ -314,9 +314,15 @@ const App = {
                         <h3>${m.name}</h3>
                         <p class="match-id">USN: ${m.student_id}</p>
                     </div>
-                    <div class="match-score">
-                        <div class="score-label">Compatibility</div>
-                        <div class="score-value">${score}%</div>
+                    <div class="score-container">
+                        <div class="score-item">
+                            <div class="score-value nlp">${Math.round(m.score * 100)}%</div>
+                            <div class="score-label">AI Match</div>
+                        </div>
+                        <div class="score-item">
+                            <div class="score-value graph">${Math.round(m.graph_score * 100)}%</div>
+                            <div class="score-label">Graph</div>
+                        </div>
                     </div>
                 </div>
                 <div class="match-details">
@@ -352,6 +358,10 @@ const App = {
                 <p class="match-id">${m.id}</p>
                 <div class="detail-item" style="font-size: 0.8rem">
                     <strong>Roles:</strong> ${m.strengths}
+                </div>
+                <div style="display: flex; gap: 10px; margin-top: 5px; font-size: 0.75rem;">
+                    <span style="color: var(--accent-primary)">AI: ${Math.round(m.score * 100)}%</span>
+                    <span style="color: var(--success)">Graph: ${Math.round(m.graph_score * 100)}%</span>
                 </div>
             `;
             elements.teamContainer.appendChild(card);
@@ -395,7 +405,18 @@ const App = {
                             ${p.title}
                             ${isCreator ? `<span class="delete-project-btn" title="Delete Project" style="cursor: pointer; color: var(--error); font-size: 1rem;">🗑️</span>` : ''}
                         </h3>
-                        ${(relevance !== undefined && relevance !== null && !isCreator) ? `<span class="relevance-badge ${badgeClass}">${relevance}% Match</span>` : ''}
+                        <div style="display: flex; gap: 8px;">
+                            ${(!isCreator) ? `
+                                <div class="relevance-badge nlp">
+                                    <span>${p.relevance_score}%</span>
+                                    <span style="font-size: 0.5rem">AI</span>
+                                </div>
+                                <div class="relevance-badge graph">
+                                    <span>${p.graph_score}%</span>
+                                    <span style="font-size: 0.5rem">Graph</span>
+                                </div>
+                            ` : ''}
+                        </div>
                     </div>
                 </div>
                 <p class="project-description">${p.description}</p>
