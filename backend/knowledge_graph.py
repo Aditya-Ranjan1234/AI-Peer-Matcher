@@ -40,16 +40,24 @@ class KnowledgeGraphService:
         "physics": {"science", "engineering"},
         "chemistry": {"science"},
         "biology": {"science"},
+        "engineering": {"science"},
+        "environmental science": {"science", "sustainability"},
+        
+        # Design & Research
+        "product design": {"design", "engineering"},
+        "graphic design": {"design", "ui/ux"},
+        "ui/ux": {"design", "web development"},
+        "design": set(),
+        "sustainability": {"science", "engineering"},
+        "research": {"science", "analysis", "material research"},
+        "material research": {"science", "research"},
+        "analysis": set(),
         
         # General Categories (Root Nodes)
         "web development": set(),
         "programming": set(),
         "ai": set(),
-        "science": set(),
-        "engineering": set(),
-        "mathematics": set(),
-        "backend": {"web development"},
-        "frontend": {"web development"}
+        "science": set()
     }
 
     def _extract_entities(self, text: str) -> Set[str]:

@@ -351,13 +351,14 @@ async def list_projects(
             if user_id != creator_id:
                 # Use raw text for KG matching
                 u_strengths = user_profile.get("strengths", "")
-                p_desc = doc.get("description", "")
+                # Combine title, description and stack for better entity extraction
+                p_text = f"{doc.get('title', '')} {doc.get('description', '')} {doc.get('stack', '')}"
                 
                 relevance, g_relevance = calculate_project_relevance(
                     user_profile["strengths_emb"], 
                     doc["description_emb"],
                     u_strengths,
-                    p_desc
+                    p_text
                 )
         
         doc["relevance_score"] = round(relevance * 100, 0)
