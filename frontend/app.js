@@ -400,23 +400,21 @@ const App = {
 
             card.innerHTML = `
                 <div class="project-header">
-                    <div style="flex: 1; display: flex; justify-content: space-between; align-items: flex-start;">
-                        <h3 style="display: flex; align-items: center; gap: 10px;">
-                            ${p.title}
-                            ${isCreator ? `<span class="delete-project-btn" title="Delete Project" style="cursor: pointer; color: var(--error); font-size: 1rem;">🗑️</span>` : ''}
-                        </h3>
-                        <div style="display: flex; gap: 8px;">
-                            ${(!isCreator) ? `
-                                <div class="relevance-badge nlp">
-                                    <span>${p.relevance_score}%</span>
-                                    <span style="font-size: 0.5rem">AI</span>
-                                </div>
-                                <div class="relevance-badge graph">
-                                    <span>${p.graph_score}%</span>
-                                    <span style="font-size: 0.5rem">Graph</span>
-                                </div>
-                            ` : ''}
-                        </div>
+                    <h3 style="display: flex; align-items: center; gap: 10px; flex: 1; margin-right: 10px;">
+                        ${p.title}
+                        ${isCreator ? `<span class="delete-project-btn" title="Delete Project" style="cursor: pointer; color: var(--error); font-size: 1rem;">🗑️</span>` : ''}
+                    </h3>
+                    <div style="display: flex; gap: 8px; flex-shrink: 0;">
+                        ${(!isCreator) ? `
+                            <div class="relevance-badge nlp" title="AI Match">
+                                <span>${p.relevance_score}%</span>
+                                <span style="font-size: 0.5rem">AI</span>
+                            </div>
+                            <div class="relevance-badge graph" title="Graph Match">
+                                <span>${p.graph_score}%</span>
+                                <span style="font-size: 0.5rem">Graph</span>
+                            </div>
+                        ` : ''}
                     </div>
                 </div>
                 <p class="project-description">${p.description}</p>

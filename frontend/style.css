@@ -551,6 +551,9 @@ body::before {
     flex-direction: column;
     align-items: center;
     line-height: 1.2;
+    flex-shrink: 0;
+    min-width: 50px;
+    white-space: nowrap;
 }
 
 .relevance-badge.nlp {
