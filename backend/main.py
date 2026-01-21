@@ -8,7 +8,7 @@ import uuid
 from models import (
     ProfileInput, MatchResult, TeamResult, 
     UserAuth, UserInDB, Project, ProjectCreate, Comment, ProjectWithScore,
-    PasswordChange
+    PasswordChange, CollaborationRating, TeamFeedback, CollaborationStats
 )
 from matcher import (
     EmbeddingService, find_best_matches, 
@@ -57,6 +57,12 @@ def get_users_collection(db=Depends(get_db)):
 
 def get_projects_collection(db=Depends(get_db)):
     return db["projects"]
+
+def get_collaborations_collection(db=Depends(get_db)):
+    return db["collaborations"]
+
+def get_team_history_collection(db=Depends(get_db)):
+    return db["team_history"]
 
 
 # ---------------------------------------------------------------------------
@@ -239,30 +245,44 @@ async def update_profile(
 async def get_matches(
     student_id: str,
     top_k: int = 3,
-    collection = Depends(get_profiles_collection),
+    use_cf: bool = True,
+    profiles_col = Depends(get_profiles_collection),
+    collaborations_col = Depends(get_collaborations_collection)
 ):
-    target = await collection.find_one({"id": student_id})
+    """Get top matches for a student using hybrid scoring with collaborative filtering"""
+    target = await profiles_col.find_one({"id": student_id})
     if not target:
         raise HTTPException(status_code=404, detail="Student not found")
 
-    all_docs = await collection.find().to_list(length=None)
+    all_docs = await profiles_col.find().to_list(length=None)
     profiles_dict = {doc["id"]: doc for doc in all_docs if "strengths_emb" in doc}
     
     if student_id not in profiles_dict:
          raise HTTPException(status_code=500, detail="Profile missing valid embeddings.")
 
-    matches = find_best_matches(student_id, profiles_dict, top_k)
+    # Fetch collaboration data for CF
+    collaborations = []
+    if use_cf:
+        cursor = collaborations_col.find()
+        collaborations = await cursor.to_list(length=None)
+    
+    matches = find_best_matches(student_id, profiles_dict, collaborations, top_k, use_cf)
+    
     return {
         "student_id": student_id,
         "student_name": target["name"],
+        "using_collaborative_filtering": use_cf and len(collaborations) > 0,
+        "total_collaborations": len(collaborations),
         "matches": [
             {
                 "student_id": m[0], 
                 "name": m[1], 
-                "score": round(m[2], 4), 
-                "graph_score": round(m[3], 4),
-                "strengths": m[4], 
-                "weaknesses": m[5]
+                "hybrid_score": round(m[2], 4),
+                "nlp_score": round(m[3], 4),
+                "cf_score": round(m[4], 4),
+                "graph_score": round(m[5], 4),
+                "strengths": m[6], 
+                "weaknesses": m[7]
             } 
             for m in matches
         ]
@@ -429,6 +449,110 @@ async def delete_project(
     
     await projects.delete_one({"id": project_id})
     return {"message": "Project deleted"}
+
+# ---------------------------------------------------------------------------
+# COLLABORATIVE FILTERING
+# ---------------------------------------------------------------------------
+@app.post("/collaborations/rate")
+async def rate_collaboration(
+    rating_data: CollaborationRating,
+    user_id: str = Depends(get_current_user_id),
+    collaborations = Depends(get_collaborations_collection)
+):
+    """Record a collaboration rating from one student to another"""
+    # Prevent self-rating
+    if rating_data.student_id == user_id:
+        raise HTTPException(status_code=400, detail="Cannot rate yourself")
+    
+    collab_doc = {
+        "id": str(uuid.uuid4()),
+        "student_a": user_id,
+        "student_b": rating_data.student_id,
+        "rating": rating_data.rating,
+        "worked_together": rating_data.worked_together,
+        "feedback": rating_data.feedback,
+        "project_context": rating_data.project_context,
+        "timestamp": datetime.utcnow()
+    }
+    
+    await collaborations.insert_one(collab_doc)
+    logger.info(f"Collaboration rated: {user_id} -> {rating_data.student_id} ({rating_data.rating}/5)")
+    
+    return {"message": "Rating recorded successfully"}
+
+@app.get("/collaborations/stats/{student_id}")
+async def get_collaboration_stats(
+    student_id: str,
+    collaborations = Depends(get_collaborations_collection),
+    profiles = Depends(get_profiles_collection)
+):
+    """Get collaboration statistics for a student"""
+    # Find all ratings received by this student
+    cursor = collaborations.find({"student_b": student_id})
+    ratings = await cursor.to_list(length=None)
+    
+    if not ratings:
+        return {
+            "student_id": student_id,
+            "total_collaborations": 0,
+            "average_rating": 0.0,
+            "top_rated_peers": []
+        }
+    
+    total = len(ratings)
+    avg_rating = sum(r['rating'] for r in ratings) / total
+    
+    # Count ratings by peer
+    peer_ratings = {}
+    for r in ratings:
+        peer_id = r['student_a']
+        if peer_id not in peer_ratings:
+            peer_ratings[peer_id] = []
+        peer_ratings[peer_id].append(r['rating'])
+    
+    # Calculate average per peer
+    top_peers = []
+    for peer_id, ratings_list in peer_ratings.items():
+        peer_profile = await profiles.find_one({"id": peer_id})
+        if peer_profile:
+            top_peers.append({
+                "student_id": peer_id,
+                "name": peer_profile['name'],
+                "avg_rating": sum(ratings_list) / len(ratings_list),
+                "num_ratings": len(ratings_list)
+            })
+    
+    # Sort by average rating
+    top_peers.sort(key=lambda x: x['avg_rating'], reverse=True)
+    
+    return {
+        "student_id": student_id,
+        "total_collaborations": total,
+        "average_rating": round(avg_rating, 2),
+        "top_rated_peers": top_peers[:5]
+    }
+
+@app.post("/teams/record")
+async def record_team(
+    team_data: TeamFeedback,
+    user_id: str = Depends(get_current_user_id),
+    teams = Depends(get_team_history_collection)
+):
+    """Record a team formation and its success rating"""
+    if user_id not in team_data.members:
+        raise HTTPException(status_code=400, detail="You must be a team member")
+    
+    team_doc = {
+        "team_id": str(uuid.uuid4()),
+        "members": team_data.members,
+        "project": team_data.project,
+        "success_rating": team_data.success_rating,
+        "created_at": datetime.utcnow(),
+        "completed_at": datetime.utcnow()
+    }
+    
+    await teams.insert_one(team_doc)
+    return {"message": "Team recorded successfully"}
 
 # ---------------------------------------------------------------------------
 # Delete a profile

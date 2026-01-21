@@ -96,6 +96,17 @@
                         <input type="password" id="new-password" required placeholder="Choose a unique password">
                     </div>
 
+                    <!-- Resume Upload (Optional) -->
+                    <div class="form-group">
+                        <label for="resume-upload">Upload Resume (Optional) <span class="helper-text-inline">(PDF, DOC,
+                                DOCX)</span></label>
+                        <input type="file" id="resume-upload" accept=".pdf,.doc,.docx" class="file-input">
+                        <p class="helper-text"
+                            style="margin-top: 0.5rem; font-size: 0.85rem; color: var(--text-secondary);">
+                            📄 Your resume helps us better understand your background
+                        </p>
+                    </div>
+
                     <div class="form-group">
                         <label>Your Strengths * <span class="helper-text-inline">(Select all that apply)</span></label>
                         <div class="checkbox-grid" id="strengths-grid">
@@ -130,6 +141,9 @@
                     </button>
                     <button class="tab-btn" data-tab="projects-tab">
                         <span>💡</span> Project Hub
+                    </button>
+                    <button class="tab-btn" data-tab="ratings-tab">
+                        <span>⭐</span> Rate Peers
                     </button>
                     <button class="tab-btn" data-tab="settings-tab">
                         <span>⚙️</span> Settings
@@ -175,6 +189,69 @@
                         </div>
                         <div id="projects-container" class="projects-container grid">
                             <!-- Projects -->
+                        </div>
+                    </div>
+
+                    <!-- Ratings Tab -->
+                    <div id="ratings-tab" class="tab-pane">
+                        <div class="content-header">
+                            <div>
+                                <h3>Rate Your Peers</h3>
+                                <p>Help improve match quality by rating students you've worked with</p>
+                            </div>
+                        </div>
+
+                        <div class="ratings-grid">
+                            <!-- Rate Peers Form -->
+                            <div class="auth-card">
+                                <h4 style="margin-bottom: 1.5rem;">Submit a Rating</h4>
+
+                                <div class="form-group">
+                                    <label for="peer-to-rate">Student ID to Rate</label>
+                                    <input type="text" id="peer-to-rate"
+                                        placeholder="Enter Student ID (e.g., stu002)" />
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Your Rating</label>
+                                    <div class="star-rating" id="star-rating">
+                                        <span class="star" data-rating="1">★</span>
+                                        <span class="star" data-rating="2">★</span>
+                                        <span class="star" data-rating="3">★</span>
+                                        <span class="star" data-rating="4">★</span>
+                                        <span class="star" data-rating="5">★</span>
+                                    </div>
+                                    <input type="hidden" id="rating-value" value="0" />
+                                    <p class="rating-text" id="rating-text">Click to rate</p>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="project-context">Project Context (optional)</label>
+                                    <input type="text" id="project-context"
+                                        placeholder="e.g., Machine Learning Project" />
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="peer-feedback">Feedback (optional)</label>
+                                    <textarea id="peer-feedback" rows="3"
+                                        placeholder="Share your collaboration experience..."></textarea>
+                                </div>
+
+                                <button id="submit-rating-btn" class="btn btn-primary btn-full">
+                                    <span class="btn-text">Submit Rating</span>
+                                </button>
+                            </div>
+
+                            <!-- Collaboration Stats Card -->
+                            <div class="auth-card">
+                                <h4 style="margin-bottom: 1.5rem;">Your Collaboration Stats</h4>
+                                <div id="collab-stats">
+                                    <div class="stats-loading"
+                                        style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+                                        <p>Loading your statistics...</p>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -306,6 +383,7 @@
     </div>
 
     <script type="module" src="app.js?v=2.1"></script>
+    <script type="module" src="init_cf.js"></script>
 </body>
 
 </html>

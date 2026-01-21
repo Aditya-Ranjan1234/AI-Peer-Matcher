@@ -1,15 +1,17 @@
 """
 NLP and Matching Logic for Peer Learning Matcher
 Uses Sentence Transformers for semantic embeddings and cosine similarity for matching.
+Includes hybrid scoring with Collaborative Filtering.
 """
 
 from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Optional
 import logging
 import os
 from knowledge_graph import KnowledgeGraphService
+from collaborative_filter import cf_service
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -138,18 +140,23 @@ def complementary_score(profile_a: Dict, profile_b: Dict) -> float:
 def find_best_matches(
     student_id: str,
     profiles: Dict[str, Dict],
-    top_k: int = 3
-) -> List[Tuple[str, str, float, float, str, str]]:
+    collaborations: Optional[List[Dict]] = None,
+    top_k: int = 3,
+    use_cf: bool = True
+) -> List[Tuple[str, str, float, float, float, float, str, str]]:
     """
-    Find the best matching students for a given student
+    Find the best matching students for a given student using hybrid scoring
     
     Args:
         student_id: ID of the target student
         profiles: Dictionary of all student profiles
+        collaborations: Optional list of collaboration data for CF
         top_k: Number of top matches to return
+        use_cf: Whether to use collaborative filtering
         
     Returns:
-        List of tuples: (student_id, name, nlp_score, graph_score, strengths, weaknesses)
+        List of tuples: (student_id, name, hybrid_score, nlp_score, cf_score, 
+                        graph_score, strengths, weaknesses)
     """
     if student_id not in profiles:
         return []
@@ -161,19 +168,31 @@ def find_best_matches(
         if pid == student_id:
             continue  # Skip self
         
+        # Calculate individual scores
         nlp_score = complementary_score(target_student, profile)
         graph_score = kg_service.get_complementary_graph_score(target_student, profile)
+        
+        cf_score = 0.0
+        if use_cf and collaborations:
+            cf_score = cf_service.get_collaborative_score(
+                student_id, pid, collaborations
+            )
+        
+        # Hybrid score: 40% NLP, 30% Graph, 30% Collaborative
+        hybrid_score = (0.4 * nlp_score) + (0.3 * graph_score) + (0.3 * cf_score)
         
         scores.append((
             pid,
             profile['name'],
+            hybrid_score,
             nlp_score,
+            cf_score,
             graph_score,
             profile['strengths'],
             profile['weaknesses']
         ))
     
-    # Sort by nlp_score (descending) and return top K
+    # Sort by hybrid score (descending) and return top K
     scores.sort(key=lambda x: x[2], reverse=True)
     return scores[:top_k]
 

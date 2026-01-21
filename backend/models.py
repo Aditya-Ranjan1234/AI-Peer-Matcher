@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Optional, List
+from typing import Optional, List, Dict
 import numpy as np
 
 
@@ -99,3 +99,28 @@ class Project(ProjectBase):
 class ProjectWithScore(Project):
     relevance_score: float = 0.0
     graph_score: float = 0.0
+
+
+# --- COLLABORATIVE FILTERING MODELS ---
+
+class CollaborationRating(BaseModel):
+    """User rates another student they worked with"""
+    student_id: str = Field(..., description="ID of student being rated")
+    rating: float = Field(..., ge=1.0, le=5.0, description="Rating from 1-5")
+    worked_together: bool = Field(True, description="Confirm they worked together")
+    feedback: Optional[str] = Field(None, description="Optional text feedback")
+    project_context: Optional[str] = Field(None, description="What project/context")
+
+
+class TeamFeedback(BaseModel):
+    """Feedback for an entire team"""
+    members: List[str] = Field(..., description="All team member IDs including self")
+    project: str = Field(..., description="Project name/description")
+    success_rating: float = Field(..., ge=1.0, le=5.0, description="Overall team success")
+
+
+class CollaborationStats(BaseModel):
+    """Statistics about a student's collaboration history"""
+    total_collaborations: int
+    average_rating: float
+    top_rated_peers: List[Dict]  # [{student_id, name, avg_rating}, ...]
